@@ -6,14 +6,73 @@
       ".read": true,
       "game": {
         ".write": true,
-        "state": { ".validate": "newData.hasChildren(['floor','run']) && newData.child('floor').isNumber() && newData.child('floor').val() >= 1 && newData.child('floor').val() <= 41" }
+        "state": {
+          ".validate": "newData.hasChildren(['floor','run']) && newData.child('floor').isNumber() && newData.child('floor').val() >= 1 && newData.child('floor').val() <= 41"
+        }
       },
-      "floors": { "$floor": { ".write": true, ".validate": "$floor.length < 60" } },
-      "players": { "$uid": { ".write": true, ".validate": "$uid.length < 40 && newData.child('name').isString() && newData.child('name').val().length <= 14" } },
-      "presence": { "$peer": { ".write": true, ".validate": "$peer.length < 20" } },
-      "pos": { "$run": { "$floor": { "$room": { "$peer": { ".write": true, ".validate": "$peer.length < 20" } } } } },
-      "events": { "$topic": { "$id": { ".write": true, ".validate": "newData.hasChildren(['t','from'])" } } },
-      "$other": { ".write": false }
+      "floors": {
+        "$floor": {
+          ".write": true,
+          ".validate": "$floor.length < 60"
+        }
+      },
+      "players": {
+        "$uid": {
+          ".write": true,
+          ".validate": "$uid.length < 40 && newData.child('name').isString() && newData.child('name').val().length <= 14"
+        }
+      },
+      "presence": {
+        "$peer": {
+          ".write": true,
+          ".validate": "$peer.length < 20"
+        }
+      },
+      "pos": {
+        "$run": {
+          "$floor": {
+            "$room": {
+              "$peer": {
+                ".write": true,
+                ".validate": "$peer.length < 20"
+              }
+            }
+          }
+        }
+      },
+      "events": {
+        "$topic": {
+          "$id": {
+            ".write": true,
+            ".validate": "newData.hasChildren(['t','from'])"
+          }
+        }
+      },
+      "$other": {
+        ".write": false
+      },
+      "g": {
+        "$code": {
+          ".validate": "$code.length >= 6 && $code.length <= 8",
+          "game": {
+            "$doc": {
+              ".write": true
+            }
+          },
+          "floors": {
+            "$floor": {
+              ".write": true,
+              ".validate": "$floor.length < 60"
+            }
+          },
+          "players": {
+            "$uid": {
+              ".write": true,
+              ".validate": "$uid.length < 40 && newData.child('name').isString() && newData.child('name').val().length <= 14"
+            }
+          }
+        }
+      }
     }
   }
 }

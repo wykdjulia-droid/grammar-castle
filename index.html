@@ -155,6 +155,63 @@ table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--edge);white-space:nowrap}
 th{font-family:var(--display);font-size:11px;color:var(--gold);letter-spacing:.08em;font-weight:400}
 td.num{font-variant-numeric:tabular-nums;text-align:right}
+.join{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.join label{flex:1 1 220px;display:grid;gap:6px;font-weight:600}
+.join label small{font-weight:400;color:var(--dim);font-size:13px}
+#class-code{font-family:var(--display);font-size:18px;letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;border-radius:4px;border:2px solid var(--edge);background:#0b0d18;color:var(--gold)}
+#class-code::placeholder{color:#a9a6b866;letter-spacing:.06em}
+#net-line{margin:0;font-size:14px;color:var(--dim)}
+#net-line.err{color:var(--bad)}
+.linkbtn{background:none;border:0;padding:4px 0;color:var(--dim);font-size:14px;text-decoration:underline;text-underline-offset:3px;justify-self:start}
+.linkbtn:hover{color:var(--gold)}
+.tv{position:absolute;inset:0;z-index:25;background:#080914;display:grid;place-items:center;overflow:hidden}
+.tv-stage{position:relative;width:min(100vw,150vh);aspect-ratio:3/2;container-type:inline-size;font-family:var(--display);color:#efe6cf}
+.tv-bg{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block;user-select:none;pointer-events:none}
+.tv-sub{position:absolute;left:40.1%;top:18.65%;width:19.7%;height:3.9%;display:flex;align-items:center;justify-content:center;gap:.6cqw;white-space:nowrap}
+.tv-sub span{font-family:var(--body);font-weight:600;font-size:1.8cqw;color:#f5ead0}
+.tv-sub b{font-size:2.1cqw;color:#f2c35b;letter-spacing:.06em;font-weight:700}
+.tv-sub.has-code span{font-size:1.15cqw;color:#c9bfa5}
+.tv-area{position:absolute;left:23.9%;top:32.4%;width:52.3%;height:58.6%}
+.tv-none,.tv-wait{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:1.6cqw;text-align:center;padding:2cqw}
+.tv-none p,.tv-wait p{margin:0;font-family:var(--body);font-size:1.6cqw;line-height:1.4;color:#d8cfb8}
+.tv-dim{color:#8f8aa3!important;font-size:1.25cqw!important}
+.tv-big{font-family:var(--body);font-size:1.9cqw;padding:1cqw 2.6cqw;border-width:.15cqw .15cqw .35cqw}
+.tv-code-big{font-size:8.5cqw;line-height:1;color:#f2c35b;letter-spacing:.06em;text-shadow:0 .4cqw 0 #6b3b0a,0 0 3cqw #f2c35b55}
+.tv-rows{position:absolute;inset:0;overflow-y:auto;scrollbar-width:thin;padding:0 0 .5cqw}
+.tv-row{position:relative;display:grid;grid-template-columns:2.2% 9.3% 11.2% 18.7% 15.6% 18.1% 19.9% 1fr;align-items:center;height:9.4%;min-height:3.4cqw;margin:.3cqw .9cqw;border:.13cqw solid transparent;border-radius:.4cqw}
+.tv-row:not(.m1):not(.m2):not(.m3):nth-child(even){background:#ffffff08}
+.tv-row.m1{background:linear-gradient(90deg,#8a63209a,#6b4a1a88);border-color:#d9ae55}
+.tv-row.m2{background:linear-gradient(90deg,#4a5b9e9a,#3a4a8888);border-color:#8fa3e8}
+.tv-row.m3{background:linear-gradient(90deg,#7a4a2a9a,#5a382088);border-color:#c48a55}
+.tv-rk{grid-column:2;justify-self:center;font-size:1.55cqw}
+.tv-medal{display:grid;place-items:center;width:2.6cqw;height:2.6cqw;border-radius:50%;font-size:1.35cqw;color:#2a1a06;font-weight:700;box-shadow:inset 0 -.25cqw 0 #0004,0 0 0 .15cqw #0006}
+.m1 .tv-medal{background:radial-gradient(circle at 40% 35%,#ffe9a3,#e0a93a 70%)}
+.m2 .tv-medal{background:radial-gradient(circle at 40% 35%,#f1f5ff,#a9b6d8 70%)}
+.m3 .tv-medal{background:radial-gradient(circle at 40% 35%,#ffd0a3,#c07a3e 70%)}
+.tv-face{grid-column:3;justify-self:center;width:3cqw;height:3cqw;border-radius:50%;object-fit:cover;object-position:50% 5%;background:#0b0d18;border:.13cqw solid #ffffff30}
+.tv-nm{grid-column:4;font-family:var(--body);font-weight:600;font-size:1.45cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.tv-nm small{display:block;font-size:.9cqw;font-weight:500;color:#a9a3bd}
+.tv-nm small.on{color:#7be0a0}
+.tv-num{font-size:1.45cqw;text-align:center;font-variant-numeric:tabular-nums}
+.tv-bt{grid-column:5}.tv-cr{grid-column:6}
+.tv-lv{grid-column:7;display:flex;align-items:center;gap:.9cqw;padding-left:2.6cqw;font-size:1.35cqw;white-space:nowrap}
+.tv-lv svg{width:2cqw;height:2cqw;flex:none}
+.tv-row:not(.m1):not(.m2):not(.m3) .tv-lv{color:#b9b4cc}
+.tv-boot{grid-column:8;justify-self:center;font-family:var(--body);font-size:.85cqw;padding:.25cqw .5cqw;border-radius:.3cqw;background:#0b0d18cc;border:.1cqw solid #ffffff40;color:#efe6cf;opacity:0;transition:opacity .15s}
+.tv-row:hover .tv-boot,.tv-boot:focus-visible,.tv-boot[data-confirm="1"]{opacity:1}
+.tv-boot[data-confirm="1"]{border-color:var(--bad);color:var(--bad);white-space:nowrap}
+@media (hover:none){.tv-boot{opacity:.75}}
+.tv-foot{position:absolute;left:31%;width:38%;top:92.7%;height:5.6%;display:flex;align-items:center;justify-content:space-between;gap:1cqw;padding:0 1.2cqw;background:#0b0d18d9;border:.13cqw solid #c9a24a;border-radius:.5cqw}
+.tv-foot span{font-family:var(--body);font-size:1.15cqw;color:#d8cfb8}
+.tv-end{font-size:1.05cqw;padding:.35cqw .9cqw;border-width:.1cqw .1cqw .25cqw;border-color:#8a3a3a}
+.tv-end:hover{border-color:var(--bad)}
+.tv-play{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:2;color:#a9a3bd}
+.teach{display:grid;gap:10px;border:2px solid var(--gold);border-radius:6px;padding:12px;background:#f2c35b10}
+.teach p{margin:0;font-size:14px;color:var(--dim)}
+.teach-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.teach small{color:var(--dim);font-size:12px}
+.code-big{font-family:var(--display);font-size:clamp(30px,6vw,44px);color:var(--gold);letter-spacing:.08em;line-height:1}
+.teach input{width:70px;font-family:var(--body);font-size:16px;padding:6px 8px;border-radius:4px;border:2px solid var(--edge);background:#0b0d18;color:var(--parch);margin-left:6px}
 .board{display:grid;gap:8px;border-top:2px dashed var(--edge);padding-top:12px}
 .board-head{display:flex;align-items:center;gap:10px}
 .board-head h2{margin:0;font-family:var(--display);font-size:16px;color:var(--gold)}
@@ -231,7 +288,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
   <!-- Title -->
   <div class="modal" id="title">
     <div class="panel">
-      <div class="eyebrow">A class adventure in 41 floors · v3</div>
+      <div class="eyebrow">A class adventure in 41 floors · v5</div>
       <h1 class="logo">Grammar Castle</h1>
       <p class="tag">Climb from the dungeon to the top of the tower. Beat monsters with good grammar. Find the stairs together.</p>
       <label for="player-name">Your hero's name
@@ -243,12 +300,16 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
         <button class="hero-card" id="pick-lilac" data-hero="lilac" aria-pressed="false"><span class="art"><img src="a/full_lilac.webp" alt=""></span><b>Sweetlillac</b><small>Healer of the floral spell</small></button>
         <button class="hero-card" id="pick-crim" data-hero="crim" aria-pressed="false"><span class="art"><img src="a/full_crim.webp" alt=""></span><b>Crimson</b><small>Assassin of the first order</small></button>
       </div>
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <span id="net-line">Loading the castle…</span>
+      <div class="join">
+        <label for="class-code">Class code <small>Leave it empty to play on your own.</small>
+          <input id="class-code" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. OWL-482">
+        </label>
         <button class="btn gold" id="start-btn" disabled>Enter the castle</button>
       </div>
+      <p id="net-line" role="status">Loading the castle…</p>
+      <button class="linkbtn" id="tv-back" hidden>Back to the teacher screen</button>
       <section class="board" aria-labelledby="board-title">
-        <div class="board-head"><h2 id="board-title">Scoreboard</h2><span class="live" id="board-live">Live</span></div>
+        <div class="board-head"><h2 id="board-title">Scoreboard</h2><span id="board-code" class="eyebrow"></span><span class="live" id="board-live">Live</span></div>
         <div class="tbl-wrap board-wrap"><table>
           <thead><tr><th class="num">#</th><th>Hero</th><th class="num">Battles</th><th class="num">Correct</th><th class="num">Level</th></tr></thead>
           <tbody id="board-body"></tbody>
@@ -257,6 +318,31 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
       </section>
       <p class="keys">Move with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows, or tap the floor. Walk into a monster to battle. Answer with <kbd>1</kbd>–<kbd>4</kbd>.</p>
     </div>
+  </div>
+
+  <!-- Teacher screen: the leaderboard art, with the class's live rows laid into its frame -->
+  <div class="tv" id="teacherv" hidden>
+    <div class="tv-stage">
+      <img class="tv-bg" src="a/leaderboard.webp" alt="">
+      <div class="tv-sub"><span id="tv-sub-label">Grammar Castle</span><b id="t-code"></b></div>
+      <div class="tv-area">
+        <div class="tv-none" id="tv-none">
+          <p>Start a class game to get a code.<br>Students type it on their screen to join the same castle.</p>
+          <button class="btn gold tv-big" id="t-start">Start game</button>
+        </div>
+        <div class="tv-wait" id="tv-wait" hidden>
+          <p>Join the castle with the code</p>
+          <div class="tv-code-big" id="tv-code-big"></div>
+          <p class="tv-dim">Students appear here as they join.</p>
+        </div>
+        <div class="tv-rows" id="tv-rows" hidden></div>
+      </div>
+      <div class="tv-foot" id="tv-live" hidden>
+        <span id="t-count"></span>
+        <button class="btn tv-end" id="t-end">End game</button>
+      </div>
+    </div>
+    <button class="linkbtn tv-play" id="tv-play">Play as a student</button>
   </div>
 
   <!-- Battle -->
@@ -315,14 +401,16 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
       <ul>
         <li>Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys, or tap where you want to go.</li>
         <li>Doors lead to other rooms. Every room you open appears on the map for the whole class.</li>
-        <li>Walk into a monster to battle. Each correct answer is a hit. Three in a row is a critical hit.</li>
+        <li>Walk into a monster to battle. Each correct answer is a hit. Three in a row is a critical hit. Monsters come back 30 seconds after they fall.</li>
+        <li>Monsters are as strong as their floor: two wrong answers against a monster of your level and you faint. Fainting costs XP, and fainting again and again can drop your level.</li>
+        <li>Classmates who answer at least one question in your battle share the XP, so fighting alone earns more.</li>
         <li>Open chests to find hint scrolls and healing potions. In a battle, a hint removes two wrong answers. A potion heals half your health. Some chests on higher floors bite back!</li>
         <li>A wrong answer lets the monster attack, and shows you the rule. Read it, it helps next time.</li>
         <li>Classmates can fight the same monster. Every hit counts for the team.</li>
         <li>Crimson is an assassin. His critical hits strike for 3 instead of 2.</li>
         <li>Sweetlillac is a healer. Every third correct answer in a row blooms flowers that heal her and every classmate fighting the same monster.</li>
         <li>The staircase is guarded. Beat the guardian, then step on the stairs. Everyone must be ready before the class climbs.</li>
-        <li>Floors 1–10 are the dungeon, 11–20 the cellars, 21–30 the castle, 31–40 the tower. Something waits on floor 41.</li>
+        <li>Floors 1–10 are the dungeon, 11–20 the cellars, 21–30 the castle, 31–40 the tower. Something waits on floor 41: a level 100 boss that the whole class must fight together.</li>
       </ul>
       <div class="row"><button class="btn gold" id="help-close">Back to the castle</button></div>
     </div>
@@ -573,7 +661,7 @@ const HEROES = {
   lilac:  { name: 'Sweetlillac', img: 'hero_lilac', h: 1.5, color: '#c9b4ff', atk: 'attack', crit: 'cast', healer: true },
   crim:   { name: 'Crimson', img: 'hero_crim', h: 1.62, color: '#ff6b6b', atk: 'attack', crit: 'cast', assassin: true },
 };
-const BOSS = { name: 'The Grammar Tyrant', type: 'knight', h: 3.4, hits: 16, dmg: .2, xp: 400 };
+const BOSS = { name: 'The Grammar Tyrant', type: 'knight', h: 3.4, hits: 50, xp: 400 };
 
 // ---------- assets ----------
 const IMG = {};
@@ -587,7 +675,7 @@ function loadAssets(onProgress) {
 
 // ---------- state ----------
 const S = {
-  mode: 'title', uid: null, localId: null, canWrite: true, teacher: true, net: false,
+  mode: 'title', uid: null, localId: null, canWrite: true, teacher: false, net: false,
   me: { name: '', hero: 'knight', level: 1, xp: 0, hp: 30, stats: {}, run: null, awarded: {} },
   game: { floor: 1, seed: 'local', run: 'local' },
   floorDoc: { hits: {}, seen: {}, chests: {} },
@@ -598,12 +686,30 @@ const S = {
 S.localId = LS.get('gs-local-id', null) || ('l' + Math.random().toString(36).slice(2, 10)); LS.set('gs-local-id', S.localId);
 Object.assign(S.me, LS.get('gs-me', {}));
 if (!S.me.items) S.me.items = { hint: 1, potion: 1 };
+const PROF = ['level', 'xp', 'hp', 'stats', 'battles', 'items', 'awarded', 'run'];
+S.profKey = LS.get('gs-prof-key', 'solo');
+function useProfile(key) {
+  const all = LS.get('gs-prof', {}) || {};
+  const cur = {}; for (const k of PROF) cur[k] = S.me[k]; all[S.profKey] = cur;
+  const next = all[key] || { level: 1, xp: 0, hp: 30, stats: {}, battles: 0, items: { hint: 1, potion: 1 }, awarded: {}, run: '' };
+  for (const k of PROF) S.me[k] = next[k] === undefined ? (k === 'stats' || k === 'awarded' ? {} : k === 'items' ? { hint: 1, potion: 1 } : k === 'level' ? 1 : 0) : next[k];
+  // keep only the latest few class games on this device
+  const keys = Object.keys(all).filter(k => k !== 'solo'); if (keys.length > 6) for (const k of keys.slice(0, keys.length - 6)) delete all[k];
+  S.profKey = key; LS.set('gs-prof', all); LS.set('gs-prof-key', key);
+}
 const maxHP = () => 30 + 6 * (S.me.level - 1);
 const xpNeed = l => 40 + l * 25;
 const myId = () => S.uid || S.localId;
 
 // ---------- net ----------
-const NET = { db: null, room: null, user: null, floorUnsub: null, queues: {} };
+const NET = { db: null, room: null, user: null, floorUnsub: null, queues: {}, base: { db: null, room: null }, subs: [] };
+// Every class game lives under its own code: g/<CODE>/... . No code means solo play on this device only.
+const fmtCode = c => c ? c.slice(0, 3) + '-' + c.slice(3) : '';
+const normCode = v => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+function scopedDb(raw, code) {
+  const pre = `g/${code}/`;
+  return { doc: p => raw.doc(pre + p), collection: p => raw.collection(pre + p) };
+}
 function queueWrite(path, patch) {
   // one write at a time per doc; coalesce patches made while a write is in flight
   const q = NET.queues[path] || (NET.queues[path] = { busy: false, pending: null });
@@ -643,8 +749,8 @@ function saveMe(force) {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     if (NET.db && S.uid && S.canWrite && (force || S.mode !== 'title') && S.me.name) {
-      const { name, hero, level, xp, stats } = S.me; const battles = S.me.battles || 0, season = S.me.season || '';
-      NET.db.doc('players/' + S.uid).set({ name, hero, level, xp, stats, battles, season, floor: S.game.floor, seen: Date.now() }).catch(() => { });
+      const { name, hero, level, xp, stats } = S.me; const battles = S.me.battles || 0;
+      NET.db.doc('players/' + S.uid).set({ name, hero, level, xp, stats, battles, floor: S.game.floor, seen: Date.now() }).catch(() => { });
     }
   }, 1500);
 }
@@ -653,60 +759,183 @@ async function initNet() {
   const c = window.claude;
   if (!c || !c.use) { netLine(); return }
   const [db, room, user] = await Promise.all(['db', 'room', 'user'].map(n => c.use(n).catch(() => null)));
-  NET.db = db; NET.room = room; NET.user = user;
+  NET.base = { db, room }; NET.user = user;
   if (user) {
     try { S.uid = await user.id() } catch { }
     try { const w = await user.can('data.write'); if (w === false) S.canWrite = false } catch { }
     try { S.teacher = !!(await user.canEdit()) } catch { S.teacher = false }
   }
-  if (db) {
-    S.net = true;
-    db.doc('game/state').onSnapshot(snap => {
-      if (!snap.exists) {
-        if (S.canWrite && !snap.metadata.fromCache && !S.creating) {
-          S.creating = true;
-          db.doc('game/state').get().then(g => { if (!g.exists) return db.doc('game/state').set({ floor: 1, seed: Math.random().toString(36).slice(2, 9), run: 'r' + Date.now().toString(36) }) }).catch(() => { }).finally(() => { S.creating = false });
-        }
-        return;
-      }
-      const d = snap.data(); S.game = { floor: clamp(d.floor | 0 || 1, 1, 41), seed: String(d.seed || 'x'), run: String(d.run || 'r') };
-      S.beat = +d.beat || 0; S.gameLoaded = true; S.game.season = String(d.season || '');
-      checkSeason();
-      applyGame();
-    }, () => { });
-    db.doc('game/ready').onSnapshot(snap => { S.ready = snap.exists ? snap.data() : null; onReady() }, () => { });
-    db.collection('players').onSnapshot(qs => { const m = {}; qs.docs.forEach(d => m[d.id] = d.data()); S.players = m; renderParty(); renderClass(); renderBoard() }, () => { });
-    if (S.uid) db.doc('players/' + S.uid).get().then(s => {
-      if (s.exists && !LS.get('gs-me', null)) { const d = s.data(); Object.assign(S.me, { name: d.name, hero: d.hero, level: d.level || 1, xp: d.xp || 0, stats: d.stats || {} }); syncTitle() }
-    }).catch(() => { });
-  }
+  S.online = !!db;
   if (room) {
-    listenBloom();
-    room.onPeers(ch => { S.peers = ch.peers; renderParty(); if (S.mode === 'title') renderBoard(); if (S.ready) onReady() }, () => { });
+    room.onPeers(ch => { S.peers = ch.peers; renderParty(); if (S.mode === 'title') { renderBoard(); netLine(); renderTeach() } if (S.ready) onReady() }, () => { });
   }
   netLine();
 }
-function netLine() {
+// Join the class game with this code. Resolves true when its castle is loaded, or false with a reason.
+async function joinGame(code, asName) {
+  if (S.code === code && NET.db && !asName) return { ok: true };
+  if (S.code === code && NET.db && asName) { const kicked = S.kicked || {}; if (Object.values(kicked).some(k => k && k.n === asName.toLowerCase())) return { ok: false, why: `The name ${asName} was removed from this game. Choose a different name.`, name: true }; return { ok: true } }
+  leaveGame();
+  const raw = NET.base.db; if (!raw) return { ok: false, why: 'Class games need an internet connection to the class castle. Leave the code empty to play on your own.' };
+  const info = await raw.doc(`g/${code}/game/info`).get().catch(() => null);
+  if (!info || !info.exists) return { ok: false, why: `There is no class game with the code ${fmtCode(code)}. Check the code with your teacher.` };
+  if (!info.data().open) return { ok: false, why: `The class game ${fmtCode(code)} has ended. Ask your teacher for a new code.` };
+  if (asName) {
+    const kd = await raw.doc(`g/${code}/game/kicked`).get().catch(() => null), kicked = kd && kd.exists ? kd.data() : {};
+    if (Object.values(kicked).some(k => k && k.n === asName.toLowerCase())) return { ok: false, why: `The name ${asName} was removed from this game. Choose a different name.`, name: true };
+  }
+  S.code = code; S.net = true; NET.db = scopedDb(raw, code); NET.room = NET.base.room;
+  const db = NET.db; let first;
+  const loaded = new Promise(r => first = r);
+  NET.subs.push(db.doc('game/state').onSnapshot(snap => {
+    if (!snap.exists) return;
+    const d = snap.data(); S.game = { floor: clamp(d.floor | 0 || 1, 1, 41), seed: String(d.seed || 'x'), run: String(d.run || 'r') };
+    first(); if (S.mode !== 'title') applyGame();
+  }, () => { }));
+  NET.subs.push(db.doc('game/info').onSnapshot(snap => {
+    if (S.code !== code) return;
+    if (!snap.exists || !snap.data().open) gameEnded(code);
+  }, () => { }));
+  NET.subs.push(db.doc('game/kicked').onSnapshot(snap => {
+    S.kicked = snap.exists ? snap.data() : {};
+    const k = S.kicked[myId()];
+    if (S.code === code && S.mode !== 'title' && k && k.n === String(S.me.name).toLowerCase()) booted(code);
+  }, () => { }));
+  NET.subs.push(db.doc('game/ready').onSnapshot(snap => { S.ready = snap.exists ? snap.data() : null; onReady() }, () => { }));
+  NET.subs.push(db.collection('players').onSnapshot(qs => { const m = {}; qs.docs.forEach(d => m[d.id] = d.data()); S.players = m; renderParty(); renderBoard(); renderTeach() }, () => { }));
+  listenBloom();
+  await Promise.race([loaded, sleep(6000)]);
+  return { ok: true };
+}
+function leaveGame() {
+  for (const u of NET.subs) try { u() } catch { }
+  NET.subs = []; if (NET.floorUnsub) { NET.floorUnsub(); NET.floorUnsub = null }
+  S.code = ''; S.net = false; NET.db = null; NET.room = null; S.players = {}; S.ready = null; loadedKey = '';
+  if (NET.base.room) { lastPres = ''; NET.base.room.presence({ c: null, f: null, b: null, w: 0 }).catch(() => { }) }
+  renderBoard();
+}
+function gameEnded(code, why) {
+  const wasIn = S.mode !== 'title';
+  if (S.battle) endBattle(true);
+  closePanels(); closeReady(); leaveGame();
+  if (LS.get('gs-code', '') === code) LS.set('gs-code', '');
+  S.mode = 'title'; for (const id of ['#hud-me', '#dock', '#dock-left', '#party', '#ready-pill']) $(id).hidden = true;
+  $('#title').hidden = false; syncTitle(); $('#class-code').value = '';
+  netLine(why || `The class game ${fmtCode(code)} has ended. Thanks for playing!`, why ? 'err' : '');
+  renderTeach();
+}
+// ---------- teacher: start and end class games ----------
+async function startClassGame() {
+  const raw = NET.base.db; if (!raw) return;
+  const L = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let code = '';
+  for (let k = 0; k < 8; k++) {
+    code = Array.from({ length: 3 }, () => L[Math.floor(Math.random() * L.length)]).join('') + String(Math.floor(Math.random() * 900) + 100);
+    const g = await raw.doc(`g/${code}/game/info`).get().catch(() => null); if (g && !g.exists) break;
+  }
+  const run = 'r' + Date.now().toString(36);
+  await raw.doc(`g/${code}/game/state`).set({ floor: 1, seed: Math.random().toString(36).slice(2, 9), run });
+  await raw.doc(`g/${code}/game/info`).set({ open: true, created: Date.now(), by: myId() });
+  LS.set('gs-teacher-code', code);
+  await joinGame(code); renderTeach();
+}
+async function endClassGame() {
+  const code = LS.get('gs-teacher-code', ''); if (!code || !NET.base.db) return;
+  await NET.base.db.doc(`g/${code}/game/info`).set({ open: false, ended: Date.now(), by: myId() }).catch(() => { });
+  LS.set('gs-teacher-code', ''); gameEnded(code); showTeacher(true);
+}
+const castleIcon = c => `<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="${c}" d="M2 15V6h2v2h1V4h2v2h2V4h2v4h1V6h2v9H9v-3a1 1 0 0 0-2 0v3z"/><path fill="${c}" opacity=".7" d="M7 1h2v3H7z"/></svg>`;
+function renderTeach() {
+  const tv = $('#teacherv'); if (tv.hidden) return;
+  const code = LS.get('gs-teacher-code', '');
+  const list = !code ? [] : Object.entries(S.players || {}).filter(([, d]) => d && d.name).map(([id, d]) => {
+    let c = 0, w = 0; for (const k in d.stats || {}) { c += +(d.stats[k].c) || 0; w += +(d.stats[k].w) || 0 }
+    return { id, name: String(d.name).slice(0, 14), hero: HEROES[d.hero] ? d.hero : 'knight', level: +d.level || 1, battles: +d.battles || 0, correct: c, acc: c + w ? Math.round(100 * c / (c + w)) : null, floor: +d.floor || 1 };
+  }).sort((a, b) => b.level - a.level || b.correct - a.correct || b.battles - a.battles || a.name.localeCompare(b.name));
+  $('#tv-none').hidden = !!code; $('#tv-live').hidden = !code;
+  $('#tv-wait').hidden = !code || list.length > 0; $('#tv-rows').hidden = !code || !list.length;
+  $('.tv-sub').classList.toggle('has-code', !!code);
+  $('#tv-sub-label').textContent = code ? 'Class code' : 'Grammar Castle';
+  $('#t-code').textContent = code ? fmtCode(code) : ''; $('#tv-code-big').textContent = fmtCode(code);
+  if (!code) return;
+  const live = new Set(uniquePlayers().filter(u => u.pr.f).map(u => u.id)), fighting = new Set(uniquePlayers().filter(u => u.pr.b).map(u => u.id));
+  $('#t-count').textContent = `${live.size} in the castle now · ${list.length} joined`;
+  const tint = ['#f2c35b', '#c9d3ea', '#d9894a'];
+  const armed = S.bootArm && Date.now() < S.bootArm.until ? S.bootArm.id : null, keep = armed ? { [armed]: 1 } : {};
+  $('#tv-rows').innerHTML = list.map((r, i) => {
+    const m = i < 3 ? ` m${i + 1}` : '', on = live.has(r.id);
+    const status = on ? (fighting.has(r.id) ? 'In battle' : `Floor ${r.floor}`) : 'Away';
+    return `<div class="tv-row${m}">
+      <span class="tv-rk">${i < 3 ? `<span class="tv-medal">${i + 1}</span>` : i + 1}</span>
+      <img class="tv-face" src="a/full_${r.hero}.webp" alt="">
+      <span class="tv-nm">${esc(r.name)}<small class="${on ? 'on' : ''}">${HEROES[r.hero].name} · ${status}</small></span>
+      <span class="tv-num tv-bt">${r.battles}</span>
+      <span class="tv-num tv-cr" title="${r.correct} correct answers">${r.acc === null ? '–' : r.acc + '%'}</span>
+      <span class="tv-lv">${castleIcon(i < 3 ? tint[i] : '#8f97c9')}Lv. ${r.level}</span>
+      <button class="tv-boot" data-boot="${esc(r.id)}"${keep[r.id] ? ' data-confirm="1"' : ''}>${keep[r.id] ? 'Tap again' : 'Boot'}</button>
+    </div>`;
+  }).join('');
+}
+$('#tv-rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-boot]'); if (!b) return;
+  const id = b.dataset.boot;
+  if (S.bootArm && S.bootArm.id === id && Date.now() < S.bootArm.until) { S.bootArm = null; bootPlayer(id); return }
+  S.bootArm = { id, until: Date.now() + 4000 }; renderTeach(); setTimeout(renderTeach, 4100);
+});
+// Booting removes a player from the game; they can only come back under a different name.
+function bootPlayer(uid) {
+  const p = (S.players || {})[uid]; if (!p || !NET.db) return;
+  const entry = { n: String(p.name).toLowerCase(), at: Date.now() };
+  NET.db.doc('game/kicked').update({ [uid]: entry }).catch(() => NET.db.doc('game/kicked').set({ ...(S.kicked || {}), [uid]: entry }).catch(() => { }));
+  NET.db.doc('players/' + uid).delete().catch(() => { });
+  delete S.players[uid]; renderTeach();
+}
+function booted(code) {
+  const all = LS.get('gs-prof', {}) || {}; delete all[code]; LS.set('gs-prof', all);
+  if (S.profKey === code) { S.profKey = 'solo'; LS.set('gs-prof-key', 'solo'); const solo = all.solo || {}; for (const k of PROF) S.me[k] = solo[k] !== undefined ? solo[k] : (k === 'level' ? 1 : k === 'items' ? { hint: 1, potion: 1 } : (k === 'stats' || k === 'awarded') ? {} : 0) }
+  gameEnded(code, 'Your teacher removed you from this game. To play again, join with a different name.');
+  $('#class-code').value = fmtCode(code); $('#player-name').value = ''; $('#player-name').focus();
+}
+function showTeacher(on) {
+  $('#teacherv').hidden = !on; $('#title').hidden = on; $('#tv-back').hidden = on || !(S.teacher && S.online);
+  if (on) {
+    const code = LS.get('gs-teacher-code', '');
+    if (code && S.code !== code) joinGame(code).then(r => { if (!r.ok) LS.set('gs-teacher-code', ''); renderTeach() });
+    renderTeach();
+  }
+}
+$('#tv-play').onclick = () => showTeacher(false);
+$('#tv-back').onclick = () => showTeacher(true);
+$('#t-start').onclick = async () => { const b = $('#t-start'); b.disabled = true; b.textContent = 'Starting…'; try { await startClassGame() } finally { b.disabled = false; b.textContent = 'Start game' } };
+$('#t-end').onclick = () => {
+  const b = $('#t-end');
+  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'Tap again to end for everyone'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = 'End game' }, 4000); return }
+  b.dataset.confirm = ''; b.textContent = 'End game'; endClassGame();
+};
+function netLine(msg, cls) {
   const el = $('#net-line');
-  if (!S.net) { el.textContent = 'Solo mode: add your Firebase settings to firebase-config.js to play together.'; return }
-  const n = uniquePlayers().length;
-  el.textContent = S.canWrite ? `Class castle connected${n ? ` · ${n} here now` : ''}` : 'You can watch, but you cannot join this castle right now.';
+  if (msg) { S.netNote = { msg, cls: cls || '' }; el.className = cls || ''; el.textContent = msg; return }
+  if (S.netNote) { el.className = S.netNote.cls; el.textContent = S.netNote.msg; return }
+  el.className = '';
+  if (!S.canWrite) { el.textContent = 'You can watch, but you cannot join this castle right now.'; return }
+  if (S.code) { const n = uniquePlayers().filter(u => u.pr.f).length; el.textContent = `Class game ${fmtCode(S.code)}${n ? ` · ${n} in the castle now` : ''}`; return }
+  el.textContent = S.online ? 'Type your class code to join your class, or leave it empty to play on your own.' : 'You will play on your own on this device.';
 }
 function uniquePlayers() {
-  const out = new Map();
-  for (const p of S.peers) { const pr = p.presence || {}; if (!pr.u || p.kind !== 'viewer') continue; const id = p.by || pr.u; if (!out.has(id)) out.set(id, { id, p, pr }) }
+  const out = new Map(); if (!S.code) return [];
+  for (const p of S.peers) { const pr = p.presence || {}; if (!pr.u || p.kind !== 'viewer' || pr.c !== S.code) continue; const id = p.by || pr.u; if (!out.has(id)) out.set(id, { id, p, pr }) }
   return [...out.values()];
 }
 let lastPres = '', presT = 0;
 function sendPresence(force) {
   if (!NET.room || S.mode === 'title') return;
   const now = performance.now(); if (!force && now - presT < 90) return;
-  const pr = { u: myId(), n: S.me.name, h: S.me.hero, run: S.game.run, f: S.game.floor, r: S.room, x: Math.round(S.px), y: Math.round(S.py), d: S.dir, m: S.moving ? 1 : 0, b: S.battle ? S.battle.mid : null, lv: S.me.level, hp: Math.round(100 * S.me.hp / maxHP()), w: S.canWrite ? 1 : 0 };
+  const pr = { c: S.code, u: myId(), n: S.me.name, h: S.me.hero, run: S.game.run, f: S.game.floor, r: S.room, x: Math.round(S.px), y: Math.round(S.py), d: S.dir, m: S.moving ? 1 : 0, b: S.battle ? S.battle.mid : null, lv: S.me.level, hp: Math.round(100 * S.me.hp / maxHP()), w: S.canWrite ? 1 : 0 };
   const key = JSON.stringify(pr); if (key === lastPres) return;
   lastPres = key; presT = now; NET.room.presence(pr).catch(() => { });
 }
 function others() {
-  return S.peers.filter(p => !p.sameTab && p.kind === 'viewer' && p.presence && p.presence.run === S.game.run && p.presence.f === S.game.floor && p.presence.u);
+  if (!S.code) return [];
+  return S.peers.filter(p => !p.sameTab && p.kind === 'viewer' && p.presence && p.presence.c === S.code && p.presence.run === S.game.run && p.presence.f === S.game.floor && p.presence.u);
 }
 
 // ---------- floor generation ----------
@@ -799,15 +1028,34 @@ function buildRoom(cell, z, r, isStairs, isBoss, n) {
 }
 
 // ---------- monster helpers ----------
+// Monster level = floor number (the summit boss is level 100).
+// Correct answers needed: floors 1-10: 2, 11-30: 3, 31-40: 4, boss: 50 (the whole class together).
+// A wrong answer lets the monster hit for half the health of a hero at the monster's level,
+// so a hero of the same level falls after two wrong answers. Against the boss, two wrong answers always knock you out.
+const hpAt = L => 30 + 6 * (L - 1);
+const floorHits = n => n >= 41 ? BOSS.hits : n <= 10 ? 2 : n <= 30 ? 3 : 4;
+const RESPAWN_MS = 30000;
 function monStats(m) {
-  if (m.boss) return { name: BOSS.name, lvl: S.me.level + 5, hits: BOSS.hits, dmg: BOSS.dmg, xp: BOSS.xp, h: BOSS.h };
-  const b = MONS[m.type];
-  const lvl = S.me.level + (m.elite ? 2 : 0);
-  const hits = b.hits + Math.round((m.zp || 0) * 2) + (m.elite ? 2 : 0);
-  return { name: (m.elite ? 'Guardian ' : '') + b.name, lvl, hits, dmg: b.dmg * (m.elite ? 1.15 : 1), xp: Math.round(b.xp * (1 + .15 * (lvl - 1)) * (m.elite ? 2 : 1)), h: b.h * (m.elite ? 1.18 : 1) };
+  const n = S.F ? S.F.n : S.game.floor;
+  if (m.boss) return { name: BOSS.name, lvl: 100, hits: BOSS.hits, dmg: Math.ceil(maxHP() / 2), xp: BOSS.xp, h: BOSS.h };
+  const b = MONS[m.type], lvl = n;
+  return { name: (m.elite ? 'Guardian ' : '') + b.name, lvl, hits: floorHits(n), dmg: Math.ceil(hpAt(lvl) / 2), xp: Math.round(b.xp * (1 + .15 * (lvl - 1)) * (m.elite ? 2 : 1)), h: b.h * (m.elite ? 1.18 : 1) };
 }
+// Ordinary monsters come back 30 seconds after they fall: each comeback is a new "life" with fresh wounds.
+function lifeOf(m) { return (m.boss || m.chest || m.guard) ? 0 : (+(S.floorDoc.lives && S.floorDoc.lives[m.id]) || 0) }
+function cid(m) { const l = lifeOf(m); return l ? m.id + '~' + l : m.id }
 function hitsOn(id) { const h = S.floorDoc.hits && S.floorDoc.hits[id]; let s = 0; if (h) for (const k in h) s += +h[k] || 0; return s }
-function isDead(m) { return hitsOn(m.id) >= monStats(m).hits }
+function isDead(m) { return hitsOn(cid(m)) >= monStats(m).hits }
+setInterval(() => {
+  if (!S.F || S.mode === 'title') return;
+  const now = Date.now(), fd = S.floorDoc;
+  for (const room of S.F.rooms) for (const m of room.mons) {
+    if (m.boss || m.guard || m.chest || !isDead(m)) continue;
+    const id = cid(m), t = fd.dead && +fd.dead[id];
+    if (!t) writeFloor({ dead: { [id]: now } });
+    else if (now - t >= RESPAWN_MS) writeFloor({ lives: { [m.id]: lifeOf(m) + 1 } });
+  }
+}, 1000);
 function monPos(m, now) {
   if (m.boss || m.guard) return [m.x, m.y];
   const t = m.RD ? 0 : 0; const T = now / 1000;
@@ -952,11 +1200,11 @@ function render(now) {
   for (const m of room.mons) {
     if (isDead(m)) continue;
     const [mx, my] = monPos(m, now); const st = monStats(m);
-    const fighting = others().some(p => p.presence.b === m.id) || (S.battle && S.battle.mid === m.id);
+    const fighting = others().some(p => p.presence.b === cid(m)) || (S.battle && S.battle.mid === cid(m));
     list.push({ y: my, f: () => {
       shadow(ctx, mx, my, tl * st.h * .3);
       drawMon(ctx, m, mx, my, tl * st.h, t, 'idle', Math.sin(now / 1000 * .45 + (m.ph || 0) + 1.57) > 0 && !m.boss);
-      const left = st.hits - hitsOn(m.id);
+      const left = st.hits - hitsOn(cid(m));
       const head = my - tl * st.h + (MONS[m.boss ? BOSS.type : m.type].fly ? -tl * st.h * .12 : 0);
       tags.push({ x: mx, y: head - tl * .3, col: m.boss ? '#e7a6ff' : m.elite ? '#ffd77d' : '#ffb0a8', label: `${st.name} · Lv ${st.lvl}` });
       if (left < st.hits) { const w = tl * 1.1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(mx - w / 2, head - tl * .2, w, tl * .1); ctx.fillStyle = '#ff6b6b'; ctx.fillRect(mx - w / 2, head - tl * .2, w * left / st.hits, tl * .1) }
@@ -1116,17 +1364,17 @@ function applyGame() {
   const prevFloor = S.F ? S.F.n : null;
   loadedKey = key;
   S.F = genFloor(S.game.floor);
-  S.floorDoc = { hits: {}, seen: {}, chests: {} };
+  S.floorDoc = { hits: {}, seen: {}, chests: {}, lives: {}, dead: {}, ans: {}, boss: {} };
   if (S.me.run !== S.game.run + '-' + S.game.floor) { S.me.run = S.game.run + '-' + S.game.floor; S.me.awarded = {} }
   // floor doc
   if (NET.floorUnsub) { NET.floorUnsub(); NET.floorUnsub = null }
   if (NET.db) {
     NET.floorUnsub = NET.db.doc(floorPath()).onSnapshot(snap => {
       const d = snap.exists ? snap.data() : {};
-      S.floorDoc = { hits: JSON.parse(JSON.stringify(d.hits || {})), seen: { ...(d.seen || {}) }, chests: { ...(d.chests || {}) } };
+      S.floorDoc = { hits: JSON.parse(JSON.stringify(d.hits || {})), seen: { ...(d.seen || {}) }, chests: { ...(d.chests || {}) }, lives: { ...(d.lives || {}) }, dead: { ...(d.dead || {}) }, ans: JSON.parse(JSON.stringify(d.ans || {})), boss: { ...(d.boss || {}) } };
       onFloorDoc();
     }, () => { });
-  } else { const lf = LS.get('gs-floor', null); if (lf && lf.key === floorPath()) S.floorDoc = lf.doc }
+  } else { const lf = LS.get('gs-floor', null); if (lf && lf.key === floorPath()) S.floorDoc = Object.assign({ hits: {}, seen: {}, chests: {}, lives: {}, dead: {}, ans: {}, boss: {} }, lf.doc) }
   const [ri, x, y] = spawnPoint(); S.room = ri; S.px = x; S.py = y; S.target = null; S.arrive = performance.now() + 600;
   S.fled = {}; clearTimeout(S.climbT); S.climbKey = null;
   if (S.battle) endBattle(true);
@@ -1136,6 +1384,13 @@ function applyGame() {
 }
 function onFloorDoc() {
   drawMinimap();
+  // heroes who answered at least one question share the XP, even if they fainted or left before the end
+  if (S.F && S.me.awarded) for (const room of S.F.rooms) for (const m of room.mons) {
+    const id = cid(m), crew = S.floorDoc.ans && S.floorDoc.ans[id];
+    if (!crew || !crew[myId()] || S.me.awarded[id] || (S.battle && S.battle.mid === id) || !isDead(m)) continue;
+    const st = monStats(m), share = Math.ceil(st.xp / Math.max(1, Object.keys(crew).length));
+    S.me.awarded[id] = 1; gainXP(share); toast(`${st.name} has fallen! Your share: ${share} XP.`);
+  }
   const b = S.battle;
   if (b && b.phase !== 'won' && b.phase !== 'lost' && isDead(b.m)) winBattle();
   if (S.F && S.F.bossRoom >= 0) { const boss = S.F.rooms[S.F.bossRoom].boss; if (boss && isDead(boss) && !S.victoryShown) { S.victoryShown = true; setTimeout(victory, b ? 2200 : 300) } }
@@ -1169,6 +1424,7 @@ function useHint() {
 }
 function usePotion() {
   const b = S.battle; if (b && b.phase !== 'ask' && b.phase !== 'feedback') return;
+  if (b && b.m.boss) { toast('Potions do not work in the final battle.'); return }
   if (S.me.items.potion < 1 || S.me.hp >= maxHP()) return;
   const heal = Math.min(maxHP() - S.me.hp, Math.ceil(maxHP() * .5));
   S.me.items.potion--; S.me.hp += heal; saveMe(); sfx('level');
@@ -1208,11 +1464,34 @@ function startBattle(m) {
   S.mode = 'battle'; S.moving = false; S.target = null; keys.w = keys.a = keys.s = keys.d = false;
   const st = monStats(m);
   S.me.battles = (S.me.battles || 0) + 1; saveMe();
-  S.battle = { m, mid: m.id, st, phase: 'ask', q: null, streak: 0, t0: performance.now(), heroAnim: null, monAnim: null, hits: 0, pops: [], flash: 0, shake: 0 };
+  S.battle = { m, mid: cid(m), st, phase: 'ask', q: null, streak: 0, t0: performance.now(), heroAnim: null, monAnim: null, hits: 0, pops: [], flash: 0, shake: 0 };
   $('#battle').hidden = false; resize();
   $('#b-mon-name').textContent = st.name; $('#b-mon-lv').textContent = 'LV ' + st.lvl;
   $('#b-me-name').textContent = S.me.name; $('#b-me-lv').textContent = 'LV ' + S.me.level;
-  sfx('encounter'); sendPresence(true); askQuestion(); battleHud();
+  sfx('encounter'); sendPresence(true);
+  if (m.boss && !(S.floorDoc.boss && S.floorDoc.boss.on)) bossWait(); else askQuestion();
+  battleHud();
+}
+// ---------- the summit boss: everyone in the castle must join before the fight starts ----------
+function bossCrew() {
+  const ids = new Set(activeVoters()); const joined = new Set([myId()]);
+  for (const u of uniquePlayers()) if (u.pr.run === S.game.run && u.pr.f === S.game.floor && u.pr.b === 'boss') joined.add(u.id);
+  return { all: [...ids], joined };
+}
+function bossWait() {
+  const b = S.battle; b.phase = 'wait';
+  $('#b-topic').textContent = 'The final battle'; $('#b-fb').hidden = true; $('#b-flee').disabled = false;
+  $('#b-hint').textContent = 'Each hero answers their own questions. Two wrong answers and you are knocked out.';
+  bossWaitTick();
+}
+function bossWaitTick() {
+  const b = S.battle; if (!b || b.phase !== 'wait') return;
+  if (S.floorDoc.boss && S.floorDoc.boss.on) { askQuestion(); return }
+  const { all, joined } = bossCrew(); const waiting = all.filter(id => !joined.has(id));
+  if (!waiting.length) { writeFloor({ boss: { on: Date.now() } }); toast('Every hero is here. The final battle begins!'); askQuestion(); return }
+  $('#b-q').textContent = `Waiting for every hero in the castle to join the fight (${all.length - waiting.length} of ${all.length} here).`;
+  $('#b-opts').innerHTML = all.map(id => `<div class="opt" style="cursor:default"><span>${esc(nameOf(id))}</span><span style="margin-left:auto;color:${joined.has(id) ? 'var(--good)' : 'var(--dim)'}">${joined.has(id) ? 'Ready to fight' : 'Not here yet'}</span></div>`).join('');
+  setTimeout(bossWaitTick, 600);
 }
 function askQuestion() {
   const b = S.battle; b.phase = 'ask'; b.q = nextQuestion(pickTier(b.m));
@@ -1221,7 +1500,7 @@ function askQuestion() {
   const box = $('#b-opts'); box.innerHTML = '';
   b.q.opts.forEach((o, i) => { const bt = document.createElement('button'); bt.className = 'opt'; bt.id = 'opt-' + i; bt.innerHTML = `<kbd>${i + 1}</kbd><span>${esc(o === '—' ? '(no word)' : o)}</span>`; bt.onclick = () => answer(i); box.appendChild(bt) });
   $('#b-flee').disabled = false; b.hinted = false; hud();
-  $('#b-hint').textContent = b.m.boss ? 'The whole class can strike the Tyrant together.' : 'Pick the word that completes the sentence.';
+  $('#b-hint').textContent = b.m.boss ? `The class needs ${BOSS.hits} correct answers together. Two wrong answers and you are knocked out.` : 'Pick the word that completes the sentence.';
   const first = $('#opt-0'); if (first && matchMedia('(pointer:fine)').matches) first.focus({ preventScroll: true });
 }
 function answer(i) {
@@ -1230,9 +1509,10 @@ function answer(i) {
   document.querySelectorAll('.opt').forEach((el, k) => { el.disabled = true; if (b.q.opts[k] === b.q.answer) el.classList.add('ok'); else if (k === i) el.classList.add('no') });
   const slot = $('#slot'); slot.textContent = b.q.answer === '—' ? '∅' : b.q.answer; slot.classList.add('ok');
   recordAnswer(b.q.topic, ok); $('#b-flee').disabled = true;
+  if (!b.joined) { b.joined = true; writeFloor({ ans: { [b.mid]: { [myId()]: 1 } } }) }
   const now = performance.now();
   if (ok) {
-    b.streak++; const crit = b.streak >= 3 && b.streak % 3 === 0; const dmg = crit ? (HEROES[S.me.hero].assassin ? 3 : 2) : 1;
+    b.streak++; const crit = !b.m.boss && b.streak >= 3 && b.streak % 3 === 0; const dmg = crit ? (HEROES[S.me.hero].assassin ? 3 : 2) : 1;
     b.phase = 'anim'; b.heroAnim = { a: crit ? HEROES[S.me.hero].crit : HEROES[S.me.hero].atk, t0: now }; sfx(crit ? 'crit' : 'hit');
     setTimeout(() => {
       if (!S.battle || S.battle !== b) return;
@@ -1250,7 +1530,7 @@ function answer(i) {
   } else {
     b.streak = 0; b.phase = 'anim';
     b.monAnim = { a: 'attack', t0: now }; sfx('miss');
-    const dmg = Math.max(2, Math.round(maxHP() * b.st.dmg));
+    const dmg = b.m.boss ? Math.ceil(maxHP() / 2) : b.st.dmg;
     setTimeout(() => {
       if (!S.battle || S.battle !== b) return;
       S.me.hp = Math.max(0, S.me.hp - dmg); b.heroAnim = { a: 'hurt', t0: performance.now() }; b.shake = 1;
@@ -1274,9 +1554,11 @@ function continueBattle() {
 function winBattle() {
   const b = S.battle; b.phase = 'won'; b.monAnim = { a: 'die', t0: performance.now() }; sfx('win');
   let msg;
-  const mineHits = (S.floorDoc.hits[b.mid] && +S.floorDoc.hits[b.mid][myId()]) || 0;
-  if (mineHits > 0 && !S.me.awarded[b.mid]) { S.me.awarded[b.mid] = 1; gainXP(b.st.xp); msg = `Victory! You earned <b>${b.st.xp} XP</b>.` }
-  else msg = 'Your classmates finished it off. Victory for the team!';
+  const crew = (S.floorDoc.ans && S.floorDoc.ans[b.mid]) || {}; const n = Math.max(1, Object.keys(crew).length);
+  if (crew[myId()] && !S.me.awarded[b.mid]) {
+    const share = Math.ceil(b.st.xp / n); S.me.awarded[b.mid] = 1; gainXP(share);
+    msg = n > 1 ? `Victory! ${n} heroes shared ${b.st.xp} XP, so you earned <b>${share} XP</b>.` : `Victory! You earned <b>${share} XP</b>.`;
+  } else msg = 'Your classmates finished it off before you answered, so no XP this time.';
   if (b.m.chest) { writeFloor({ chests: { [b.m.id]: myId() } }); giveLoot() }
   if (b.m.guard) msg += ' The stairs are open now.';
   document.querySelectorAll('.opt').forEach(el => el.disabled = true);
@@ -1284,9 +1566,18 @@ function winBattle() {
   $('#b-continue').innerHTML = 'Back to the castle <kbd>Enter</kbd>';
   battleHud(); $('#b-continue').focus({ preventScroll: true });
 }
+function deathPenalty() {
+  const before = S.me.level, lose = Math.round(xpNeed(S.me.level) * .5);
+  S.me.xp -= lose;
+  while (S.me.xp < 0 && S.me.level > 1) { S.me.level--; S.me.xp += xpNeed(S.me.level) }
+  if (S.me.xp < 0) S.me.xp = 0;
+  S.me.hp = maxHP(); saveMe(); sendPresence(true); hud();
+  return { lose, dropped: before - S.me.level };
+}
 function loseBattle() {
   const b = S.battle; b.phase = 'lost';
-  $('#b-fb-text').innerHTML = 'You fainted! You wake up in your starting room with full health. The monster still has its wounds, so come back stronger.';
+  const { lose, dropped } = deathPenalty();
+  $('#b-fb-text').innerHTML = `You fainted and lost <b>${lose} XP</b>${dropped ? `, dropping to <b>level ${S.me.level}</b>` : ''}. You wake up in your starting room with full health. The monster keeps its wounds, so come back stronger.`;
   $('#b-continue').innerHTML = 'Wake up <kbd>Enter</kbd>';
 }
 function endBattle(silent) {
@@ -1294,8 +1585,8 @@ function endBattle(silent) {
   $('#battle').hidden = true; $('#b-continue').innerHTML = 'Continue <kbd>Enter</kbd>';
   S.battle = null; S.mode = S.mode === 'title' ? 'title' : 'play';
   if (!silent) {
-    if (b.phase === 'lost') { S.me.hp = maxHP(); const [ri, x, y] = spawnPoint(); S.room = ri; S.px = x; S.py = y; S.fled[b.mid] = performance.now() + 4000 }
-    else if (b.phase !== 'won') { S.fled[b.mid] = performance.now() + 4000; const tl = S.F.rooms[S.room].RD.tile; nudgeAway(b.m, tl) }
+    if (b.phase === 'lost') { S.me.hp = maxHP(); const [ri, x, y] = spawnPoint(); S.room = ri; S.px = x; S.py = y; S.fled[b.m.id] = performance.now() + 4000 }
+    else if (b.phase !== 'won') { S.fled[b.m.id] = performance.now() + 4000; const tl = S.F.rooms[S.room].RD.tile; nudgeAway(b.m, tl) }
   }
   hud(); sendPresence(true); drawMinimap();
 }
@@ -1304,7 +1595,7 @@ function nudgeAway(m, tl) {
   let dx = S.px - mx, dy = S.py - my; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
   for (let k = 1; k < 5; k++) { const x = S.px + dx * tl * .5 * k, y = S.py + dy * tl * .5 * k; if (!blocked(room, x, y)) { S.px = x; S.py = y } }
 }
-function flee() { const b = S.battle; if (!b || b.phase !== 'ask') return; toast('You ran away. The monster keeps its wounds.'); endBattle() }
+function flee() { const b = S.battle; if (!b || (b.phase !== 'ask' && b.phase !== 'wait')) return; toast('You ran away. The monster keeps its wounds.'); endBattle() }
 function battleKey(e) {
   const b = S.battle; if (!b) return;
   if (e.key.toLowerCase() === 'h') { e.preventDefault(); useHint(); return }
@@ -1468,7 +1759,8 @@ function hud() {
   $('#inv-potion').disabled = it.potion < 1 || S.me.hp >= mh;
   const bb = S.battle;
   $('#b-use-hint').textContent = `Use hint (${it.hint})`; $('#b-use-hint').disabled = !bb || bb.phase !== 'ask' || bb.hinted || it.hint < 1;
-  $('#b-use-potion').textContent = `Drink potion (${it.potion})`; $('#b-use-potion').disabled = !bb || (bb.phase !== 'ask' && bb.phase !== 'feedback') || it.potion < 1 || S.me.hp >= mh;
+  const bossFight = !!(bb && bb.m.boss);
+  $('#b-use-potion').textContent = `Drink potion (${it.potion})`; $('#b-use-potion').disabled = !bb || bossFight || (bb.phase !== 'ask' && bb.phase !== 'feedback') || it.potion < 1 || S.me.hp >= mh;
   if (S.F) { $('#hud-floor-n').textContent = S.F.z.boss ? 'FLOOR 41 · SUMMIT' : 'FLOOR ' + S.F.n; $('#hud-zone').textContent = S.F.z.name }
   if (S.battle) battleHud();
 }
@@ -1527,13 +1819,14 @@ function closePanels() { for (const id of ['#classp', '#help']) $(id).hidden = t
 $('#btn-class').onclick = () => { $('#classp').hidden = false; renderClass(); S.mode = 'paused' };
 $('#class-close').onclick = closePanels;
 $('#btn-menu').onclick = () => {
-  S.resetChecked = false; setTimeout(() => { resetIfEmpty(); renderBoard() }, 0);
+  setTimeout(() => { renderBoard(); renderTeach() }, 0);
   if (S.battle) endBattle(true);
   closePanels(); closeReady(); saveMe();
   S.mode = 'title'; S.moving = false; S.target = null;
   for (const id of ['#hud-me', '#dock', '#dock-left', '#party', '#ready-pill']) $(id).hidden = true;
   $('#title').hidden = false; syncTitle(); netLine();
   if (NET.room) { lastPres = ''; NET.room.presence({ f: null, b: null, w: 0 }).catch(() => { }) }
+  $('#class-code').value = fmtCode(S.code);
 };
 $('#btn-help').onclick = () => { $('#help').hidden = false; S.mode = 'paused' };
 $('#help-close').onclick = closePanels;
@@ -1580,15 +1873,27 @@ function titleHeroes(now) {
     drawHero(x, b.dataset.hero, 'down', b.dataset.hero === chosen, 75, 140, 120, now / 1000);
   }
 }
-$('#start-btn').onclick = () => {
-  S.me.name = cleanName($('#player-name').value); S.me.hero = chosen; if (!S.me.hp) S.me.hp = maxHP();
+$('#start-btn').onclick = async () => {
+  const btn = $('#start-btn'); if (btn.disabled) return;
+  const code = normCode($('#class-code').value);
+  if (code && code.length !== 6) { netLine('Class codes have 3 letters and 3 numbers, like OWL-482.', 'err'); $('#class-code').focus(); return }
+  btn.disabled = true; btn.textContent = code ? 'Joining…' : 'Entering…';
+  let res = { ok: true };
+  try { if (code) res = await joinGame(code, cleanName($('#player-name').value)); else leaveGame() } finally { btn.disabled = false; btn.textContent = 'Enter the castle' }
+  if (!res.ok) { netLine(res.why, 'err'); (res.name ? $('#player-name') : $('#class-code')).focus(); return }
+  S.netNote = null;
+  LS.set('gs-code', code);
+  S.me.name = cleanName($('#player-name').value); S.me.hero = chosen;
+  useProfile(code || 'solo'); if (!S.me.hp) S.me.hp = maxHP();
+  if (!code) { const g = LS.get('gs-game', null); S.game = g && g.run ? g : { floor: 1, seed: Math.random().toString(36).slice(2, 9), run: 'solo' + Date.now().toString(36) }; LS.set('gs-game', S.game) }
   $('#title').hidden = true; for (const id of ['#hud-me', '#dock', '#dock-left']) $(id).hidden = false;
   S.mode = 'play'; drawPortrait($('#hud-portrait'), S.me.hero);
-  if (!S.net) { const g = LS.get('gs-game', null); if (g) S.game = g; }
-  loadedKey = ''; applyGame(); saveMe(); sfx('stairs');
-  if (!S.net) toast('Solo mode: each device has its own castle until Firebase is set up.');
-  maybeReset();
+  loadedKey = ''; applyGame(); saveMe(true); sfx('stairs');
+  toast(code ? `You joined class game ${fmtCode(code)}.` : 'Playing on your own. Your progress is saved on this device.');
 };
+$('#player-name').addEventListener('input', () => { if (S.netNote) { S.netNote = null; netLine() } });
+$('#class-code').addEventListener('input', e => { if (S.netNote) { S.netNote = null; netLine() } const v = normCode(e.target.value); e.target.value = v.length > 3 ? fmtCode(v) : v });
+$('#class-code').addEventListener('keydown', e => { if (e.key === 'Enter') $('#start-btn').click() });
 
 // ---------- scoreboard ----------
 function correctOf(stats) { let c = 0; for (const k in stats || {}) c += +(stats[k] && stats[k].c) || 0; return c }
@@ -1596,7 +1901,6 @@ function renderBoard() {
   const rows = new Map();
   for (const [id, d] of Object.entries(S.players || {})) {
     if (!d || !d.name) continue;
-    if ((d.season || '') !== (S.game.season || '')) continue;   // from an earlier game
     rows.set(id, { name: String(d.name).slice(0, 14), hero: HEROES[d.hero] ? d.hero : 'knight', level: +d.level || 1, battles: +d.battles || 0, correct: correctOf(d.stats) });
   }
   if (S.me.name) rows.set(myId(), { name: S.me.name, hero: S.me.hero, level: S.me.level, battles: S.me.battles || 0, correct: correctOf(S.me.stats), me: true });
@@ -1608,60 +1912,11 @@ function renderBoard() {
     <td class="num">${i + 1}</td>
     <td><div class="who"><img class="face" src="a/full_${r.hero}.webp" alt=""><span><b>${esc(r.name)}${r.me ? ' (you)' : ''}${r.on ? '<span class="on" title="Playing now"></span>' : ''}</b><small>${HEROES[r.hero].name}</small></span></div></td>
     <td class="num">${r.battles}</td><td class="num">${r.correct}</td><td class="num">${r.level}</td></tr>`).join('');
-  $('#board-live').hidden = !S.net;
+  $('#board-live').hidden = !S.code; $('#board-code').textContent = S.code ? fmtCode(S.code) : '';
+  $('.board').hidden = !S.code;
 }
 
-// ---------- empty castle reset ----------
-// While anyone is playing, the castle's shared "still here" clock ticks about every 45 seconds.
-// When someone enters and that clock has been quiet for 3 minutes, with no one else in the game,
-// everybody must have left: the castle starts over on floor 1 with every chest and monster back.
-const QUIET_MS = 3 * 60 * 1000, BEAT_MS = 45 * 1000;
-function sendBeat() {
-  const now = Date.now(); S.beat = now;
-  if (NET.db && S.canWrite) NET.db.doc('game/state').update({ beat: now }).catch(() => { });
-  else LS.set('gs-beat', now);
-}
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function maybeReset() {
-  if (S.resetChecked) { sendBeat(); return }
-  S.resetChecked = true;
-  if (NET.db) { for (let k = 0; k < 25 && !S.gameLoaded; k++) await sleep(200) }
-  if (NET.room) { for (let k = 0; k < 15 && !NET.room.connected(); k++) await sleep(200); await sleep(2500) }   // let everyone already inside show up
-  if (S.mode === 'title') { S.resetChecked = false; return }
-  if (resetIfEmpty()) toast('A fresh castle! All chests and monsters are back, and the scoreboard starts again.');
-  sendBeat();
-}
-function castleEmpty() {
-  const beat = NET.db ? (S.beat || 0) : (+LS.get('gs-beat', 0) || 0);
-  const others = uniquePlayers().filter(u => u.id !== myId() && u.pr.f && u.pr.run === S.game.run);
-  // nobody else inside? the live room knows; without it, fall back to the quiet clock
-  return NET.room && NET.room.connected() ? !others.length : NET.db ? (!beat || Date.now() - beat > QUIET_MS) : true;
-}
-function hasProgress() {
-  const fd = S.floorDoc || {}; let any = false;
-  for (const p of Object.values(S.players || {})) if (p && (p.season || '') === (S.game.season || '') && ((+p.battles || 0) > 0 || correctOf(p.stats) > 0)) any = true;
-  return any || S.game.floor > 1 || Object.keys(fd.hits || {}).length > 0 || Object.keys(fd.chests || {}).length > 0 || (S.me.battles || 0) > 0 || correctOf(S.me.stats) > 0;
-}
-// A fresh castle is a whole new game: castle, scoreboard and every hero's progress start again.
-function resetIfEmpty() {
-  if (!S.canWrite || !castleEmpty() || !hasProgress()) return false;
-  const run = 'r' + Date.now().toString(36);
-  const fresh = { floor: 1, run, season: run, beat: Date.now() };
-  if (NET.db) writeGame(fresh); else { Object.assign(S.game, fresh); LS.set('gs-game', S.game); LS.set('gs-floor', null); applyGame() }
-  checkSeason(); return true;
-}
-function checkSeason() {
-  const season = S.game.season || '';
-  if (!season || S.me.season === season) return;
-  Object.assign(S.me, { level: 1, xp: 0, stats: {}, battles: 0, awarded: {}, items: { hint: 1, potion: 1 }, season });
-  S.me.hp = maxHP(); hud(); saveMe(true); renderBoard();
-}
-setInterval(() => {
-  if (S.mode === 'title' || !S.resetChecked) return;
-  // only one player needs to tick the clock: the one with the lowest id among those playing
-  const ids = uniquePlayers().filter(u => u.pr.f && u.pr.run === S.game.run).map(u => u.id).concat(myId()).sort();
-  if (!NET.room || ids[0] === myId()) sendBeat();
-}, BEAT_MS);
 $('#player-name').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('#start-btn').disabled) $('#start-btn').click() });
 
 // ---------- loop ----------
@@ -1682,10 +1937,12 @@ function frame(ts) {
 window.claude?.hot?.snapshot?.(() => ({ room: S.room, px: S.px, py: S.py, mode: S.mode === 'title' ? 'title' : 'play' }));
 async function boot(hot) {
   resize(); syncTitle();
-  initNet();
+  const netReady = initNet();
   await loadAssets(p => { $('#net-line').textContent = `Loading the castle… ${Math.round(p * 100)}%` });
-  $('#start-btn').disabled = false; netLine(); renderBoard();
-  if (!S.net) { S.game = LS.get('gs-game', S.game); checkSeason() }
+  await Promise.race([netReady, sleep(4000)]);
+  $('#start-btn').disabled = false; $('#class-code').value = fmtCode(LS.get('gs-code', '')); netLine(); renderBoard();
+  if (S.teacher && S.online && !(hot && hot.mode === 'play')) showTeacher(true); else $('#tv-back').hidden = !(S.teacher && S.online);
+  S.game = LS.get('gs-game', null) || S.game;
   applyGame();
   if (hot && hot.mode === 'play' && S.me.name) { $('#start-btn').click(); if (S.F && S.F.rooms[hot.room]) { S.room = hot.room; S.px = hot.px; S.py = hot.py } }
   requestAnimationFrame(frame);
