@@ -966,7 +966,9 @@ function render(now) {
   // other players in this room
   for (const p of others()) {
     const pr = p.presence; if (pr.r !== S.room || !HEROES[pr.h]) continue;
-    const g = S.ghosts[p.peer] || (S.ghosts[p.peer] = { x: pr.x, y: pr.y });
+    if (!Number.isFinite(pr.x) || !Number.isFinite(pr.y)) continue;   // position not arrived yet
+    let g = S.ghosts[p.peer];
+    if (!g || !Number.isFinite(g.x) || !Number.isFinite(g.y) || g.r !== pr.r || Math.hypot(g.x - pr.x, g.y - pr.y) > 400) g = S.ghosts[p.peer] = { x: pr.x, y: pr.y, r: pr.r };
     g.x = lerp(g.x, pr.x, .25); g.y = lerp(g.y, pr.y, .25);
     list.push({ y: g.y, f: () => { shadow(ctx, g.x, g.y, tl * .36); drawHero(ctx, pr.h, pr.d, !!pr.m, g.x, g.y, tl * HEROES[pr.h].h, t + (p.peer.charCodeAt(0) || 0), null, pr.b ? .7 : 1); nameTag(String(pr.n || 'Hero'), pr.lv, g.x, g.y - tl * HEROES[pr.h].h - tl * .12, tl, HEROES[pr.h].color, !!pr.b) } });
   }
