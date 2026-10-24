@@ -1,0 +1,1695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="a/full_knight.webp">
+<title>Grammar Castle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&display=swap">
+<style>
+/* Layout: one full-screen torch-lit canvas; HUD pinned to the corners; battles and votes rise as stone-and-gold panels over the world. */
+:root{
+  --night:#0b0d18;      /* dungeon void */
+  --stone:#1b1f33;      /* panel stone */
+  --stone-2:#262b45;    /* raised stone */
+  --edge:#3b4266;       /* carved edge */
+  --parch:#efe6cf;      /* parchment text */
+  --dim:#a9a6b8;        /* faded ink */
+  --gold:#f2c35b;       /* gilt trim, primary accent */
+  --ember:#ff8a3d;      /* torchlight */
+  --good:#7be0a0;       /* correct */
+  --bad:#ff6b6b;        /* wrong / damage */
+  --mana:#8fb8ff;       /* xp */
+  --display:"Silkscreen", "Courier New", monospace;
+  --body:"Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+  color-scheme: dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--night);color:var(--parch);font-family:var(--body);font-size:16px;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#app{position:fixed;inset:0;overflow:hidden;touch-action:none}
+#world{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer;image-rendering:auto}
+button{font-family:var(--body);font-size:16px;color:var(--parch);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn{background:linear-gradient(var(--stone-2),var(--stone));border:2px solid var(--edge);border-bottom-width:4px;border-radius:4px;padding:8px 14px;font-weight:600;letter-spacing:.02em}
+.btn:hover{border-color:var(--gold)}
+.btn:active{transform:translateY(2px);border-bottom-width:2px}
+.btn.gold{background:linear-gradient(#ffd77d,#d99a2b);color:#2a1a06;border-color:#7a4f12}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:default}
+.eyebrow{font-family:var(--display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.bar{position:relative;height:10px;background:#0006;border:1px solid #0009;border-radius:2px;overflow:hidden}
+.bar>i{position:absolute;inset:0 auto 0 0;width:50%;background:var(--good);transition:width .35s ease}
+.bar.hp>i{background:linear-gradient(#ff8f8f,#d8424a)}
+.bar.xp>i{background:linear-gradient(#b9d3ff,#5b86e6)}
+.bar>span{position:absolute;inset:0;font-size:10px;line-height:10px;text-align:center;font-family:var(--display);color:#fff;text-shadow:0 1px 0 #000}
+
+/* HUD */
+.hud{position:absolute;pointer-events:none;z-index:5}
+.hud *{pointer-events:auto}
+#hud-me{top:calc(10px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center;background:#0b0d18cc;border:2px solid var(--edge);border-radius:6px;padding:8px 10px 8px 8px;min-width:230px}
+#hud-portrait{width:52px;height:52px;border:2px solid var(--gold);border-radius:4px;background:#000;image-rendering:auto}
+#hud-me .who{display:grid;gap:4px;flex:1;min-width:0}
+#hud-me .nm{display:flex;justify-content:space-between;gap:8px;font-weight:700}
+#hud-me .nm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hud-lv{font-family:var(--display);font-size:12px;color:var(--gold);white-space:nowrap}
+#hud-floor{top:calc(10px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));background:#0b0d18cc;border:2px solid var(--edge);border-radius:6px;padding:8px;display:grid;gap:6px;justify-items:end}
+#hud-floor .fl{font-family:var(--display);font-size:16px;color:var(--gold);line-height:1}
+#hud-floor .zn{font-size:13px;color:var(--dim)}
+#minimap{display:block;border-radius:3px;background:#0005}
+#dock-left{bottom:calc(12px + env(safe-area-inset-bottom,0px));left:max(12px,env(safe-area-inset-left,0px))}
+#dock-left .btn{padding:6px 10px;font-size:14px}
+#party{bottom:calc(56px + env(safe-area-inset-bottom,0px));left:max(12px,env(safe-area-inset-left,0px));display:grid;gap:4px;max-width:240px}
+#party .pp{display:flex;gap:6px;align-items:center;background:#0b0d18b8;border:1px solid var(--edge);border-radius:4px;padding:3px 8px;font-size:13px}
+#party .dot{width:8px;height:8px;border-radius:50%;flex:none}
+#party .pp em{font-style:normal;color:var(--dim);font-size:12px;margin-left:auto;white-space:nowrap}
+#dock{bottom:calc(12px + env(safe-area-inset-bottom,0px));right:max(12px,env(safe-area-inset-right,0px));display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#dock .btn{padding:6px 10px;font-size:14px}
+#ready-pill{top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%)}
+#ready-pill .btn{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 4px #f2c35b55}}
+#toasts{position:absolute;left:50%;top:22%;transform:translateX(-50%);display:grid;gap:6px;justify-items:center;pointer-events:none;z-index:8;width:min(92vw,520px)}
+.toast{background:#0b0d18e6;border:2px solid var(--gold);border-radius:4px;padding:8px 14px;font-weight:600;text-align:center;animation:toast 3.2s ease forwards}
+@keyframes toast{0%{opacity:0;transform:translateY(8px)}8%,80%{opacity:1;transform:none}100%{opacity:0}}
+#banner{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:7}
+#banner div{text-align:center;opacity:0}
+#banner.show div{animation:banner 3s ease forwards}
+#banner b{display:block;font-family:var(--display);font-size:clamp(28px,6vw,54px);color:var(--gold);text-shadow:0 3px 0 #000,0 0 24px #000}
+#banner span{display:block;font-size:clamp(16px,3vw,22px);text-shadow:0 2px 0 #000}
+@keyframes banner{0%{opacity:0;transform:scale(.96)}15%,75%{opacity:1;transform:none}100%{opacity:0}}
+#fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .22s;z-index:6}
+
+/* Panels */
+.modal{position:absolute;inset:0;background:#05060cb3;display:grid;place-items:center;z-index:20;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px))}
+.panel{background:linear-gradient(var(--stone-2),var(--stone));border:3px solid var(--edge);outline:2px solid #000;border-radius:6px;box-shadow:inset 0 0 0 2px #f2c35b33,0 20px 60px #000;padding:20px;width:min(100%,560px);max-height:100%;overflow:auto;display:grid;gap:14px}
+.panel h2{margin:0;font-family:var(--display);font-size:22px;color:var(--gold);text-wrap:balance;line-height:1.2}
+.panel p{margin:0;line-height:1.45}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Title */
+#title .panel{width:min(100%,860px);gap:14px}
+#title .logo{font-family:var(--display);font-size:clamp(30px,7vw,52px);line-height:.95;color:var(--gold);text-shadow:0 4px 0 #6b3b0a,0 0 30px #f2c35b44;text-wrap:balance;margin:0}
+#title .tag{color:var(--dim)}
+#title label{display:grid;gap:6px;font-weight:600}
+#player-name{font-family:var(--body);font-size:18px;padding:10px 12px;border-radius:4px;border:2px solid var(--edge);background:#0b0d18;color:var(--parch)}
+.heroes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.hero-card{display:grid;gap:4px;justify-items:center;padding:10px;border:2px solid var(--edge);border-radius:6px;background:#0b0d1888;text-align:center}
+.hero-card .art{display:block;width:100%;height:clamp(150px,30vh,250px);overflow:hidden;background:radial-gradient(ellipse at 50% 92%,#7889dc33,transparent 60%);border-radius:4px}
+.hero-card .art img{display:block;width:100%;height:100%;min-height:0;object-fit:contain;object-position:50% 100%;transition:transform .25s ease, filter .25s ease;filter:saturate(.8) brightness(.85)}
+.hero-card[aria-pressed="true"] .art{background:radial-gradient(ellipse at 50% 92%,#f2c35b55,transparent 62%)}
+.hero-card[aria-pressed="true"] .art img{filter:none;animation:herofloat 2.6s ease-in-out infinite}
+.hero-card:hover .art img{filter:none}
+@keyframes herofloat{50%{transform:translateY(-6px)}}
+.hero-card b{font-family:var(--display);font-size:14px}
+.hero-card small{color:var(--dim);font-size:13px}
+.hero-card[aria-pressed="true"]{border-color:var(--gold);background:#f2c35b18;box-shadow:inset 0 0 0 1px var(--gold)}
+#net-line{font-size:13px;color:var(--dim)}
+.keys{font-size:13px;color:var(--dim);line-height:1.5}
+kbd{font-family:var(--display);font-size:11px;border:1px solid var(--edge);border-bottom-width:2px;border-radius:3px;padding:1px 4px;color:var(--parch)}
+
+/* Battle */
+#battle{position:absolute;inset:0;z-index:15;display:grid;grid-template-rows:minmax(150px,1fr) auto;align-content:center;background:#05060c99;padding-block:calc(8px + env(safe-area-inset-top,0px)) calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));gap:10px;justify-items:center}
+#stage-wrap{position:relative;width:min(100%,880px);height:min(100%,460px);min-height:150px;align-self:end;border:3px solid var(--edge);outline:2px solid #000;border-radius:6px;overflow:hidden}
+#stage{position:absolute;inset:0;width:100%;height:100%}
+.b-mon{position:absolute;right:10px;top:10px;width:min(46%,280px);background:#0b0d18d9;border:2px solid var(--edge);border-radius:4px;padding:6px 8px;display:grid;gap:4px}
+.b-me{position:absolute;left:10px;top:10px;width:min(46%,280px);background:#0b0d18d9;border:2px solid var(--edge);border-radius:4px;padding:6px 8px;display:grid;gap:4px}
+.b-mon .t,.b-me .t{display:flex;justify-content:space-between;gap:6px;font-weight:700;font-size:14px}
+.b-mon .t span,.b-me .t span{font-family:var(--display);font-size:11px;color:var(--gold);white-space:nowrap}
+#b-allies{position:absolute;left:10px;bottom:8px;font-size:13px;color:var(--parch);text-shadow:0 1px 0 #000}
+.b-card{width:min(100%,880px);background:linear-gradient(var(--stone-2),var(--stone));border:3px solid var(--edge);outline:2px solid #000;border-radius:6px;padding:14px 16px;display:grid;gap:10px}
+.b-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#b-streak{font-family:var(--display);font-size:12px;color:var(--ember)}
+.b-q{margin:0;font-size:clamp(17px,2.3vw,21px);line-height:1.3;font-weight:500;text-wrap:balance}
+.slot{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--gold);text-align:center;color:var(--gold);padding:0 .2em}
+.slot.ok{color:var(--good);border-color:var(--good)}
+.b-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;background:#0b0d18;border:2px solid var(--edge);border-bottom-width:4px;border-radius:4px;padding:7px 10px;font-size:16px;font-weight:500;min-height:42px}
+.opt kbd{flex:none}
+.opt:hover:not(:disabled){border-color:var(--gold)}
+.opt.ok{border-color:var(--good);background:#7be0a022}
+.opt.no{border-color:var(--bad);background:#ff6b6b22}
+.opt:disabled{cursor:default}
+#b-fb{display:grid;gap:10px;border-top:2px dashed var(--edge);padding-top:10px}
+#b-fb-text{margin:0;font-size:15px;line-height:1.45}
+#b-fb-text b{color:var(--gold)}
+.b-foot{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.b-foot small{color:var(--dim);font-size:13px}
+.b-items{display:flex;gap:8px;flex-wrap:wrap}
+.b-items .btn{padding:6px 10px;font-size:14px}
+.opt.gone{opacity:.28;text-decoration:line-through;border-style:dashed}
+.inv{display:flex;gap:6px;margin-top:2px}
+.inv button{font-size:12px;padding:2px 7px;border-radius:3px;background:#0b0d18;border:1px solid var(--edge);color:var(--parch)}
+.inv button:hover:not(:disabled){border-color:var(--gold)}
+.inv button:disabled{opacity:.5;cursor:default}
+.inv b{color:var(--gold)}
+
+/* Ready + class */
+#ready-list,#class-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+#ready-list li{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;background:#0b0d18aa;border:1px solid var(--edge);border-radius:4px}
+#ready-list .ok{color:var(--good);font-family:var(--display);font-size:12px}
+#ready-list .wait{color:var(--dim);font-family:var(--display);font-size:12px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--edge);white-space:nowrap}
+th{font-family:var(--display);font-size:11px;color:var(--gold);letter-spacing:.08em;font-weight:400}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.board{display:grid;gap:8px;border-top:2px dashed var(--edge);padding-top:12px}
+.board-head{display:flex;align-items:center;gap:10px}
+.board-head h2{margin:0;font-family:var(--display);font-size:16px;color:var(--gold)}
+.live{font-family:var(--display);font-size:10px;letter-spacing:.12em;color:var(--good);display:inline-flex;align-items:center;gap:6px}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse-dot 1.6s ease-in-out infinite}
+@keyframes pulse-dot{50%{opacity:.3}}
+.board-wrap{max-height:230px;overflow:auto;border:1px solid var(--edge);border-radius:4px;background:#0b0d1866}
+.board table th{position:sticky;top:0;background:var(--stone);z-index:1}
+.board td{vertical-align:middle}
+.board .who{display:flex;align-items:center;gap:8px}
+.board .face{width:30px;height:30px;flex:none;border-radius:4px;border:1px solid var(--edge);object-fit:cover;object-position:50% 4%;background:#000}
+.board .who b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.board .who small{display:block;color:var(--dim);font-size:12px}
+.board .on{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-left:6px;vertical-align:middle}
+.board tr.me td{background:#f2c35b14}
+.board tr.top1 td:first-child{color:var(--gold)}
+.board-empty{color:var(--dim);font-size:14px}
+.board th.num{text-align:right}
+.board th:first-child,.board td:first-child{width:2.5em}
+.teacher{display:grid;gap:10px;border-top:2px dashed var(--edge);padding-top:12px}
+.teacher input{width:70px;font-family:var(--body);font-size:16px;padding:6px 8px;border-radius:4px;border:2px solid var(--edge);background:#0b0d18;color:var(--parch)}
+#help .panel ul{margin:0;padding-left:20px;display:grid;gap:6px;line-height:1.45}
+
+@media (max-width:640px){
+  #hud-me{min-width:0;padding:6px}
+  #hud-portrait{width:40px;height:40px}
+  #hud-me .who{width:130px}
+  #party{display:none}
+  .b-opts{grid-template-columns:1fr}
+  .opt{font-size:15px;min-height:40px;padding:6px 10px}
+  .heroes{gap:6px;grid-template-columns:repeat(2,1fr)}
+  .hero-card .art{height:150px}
+  #battle{grid-template-rows:minmax(120px,1fr) auto}
+  #stage-wrap{height:min(100%,300px)}
+  .b-me,.b-mon{width:calc(50% - 14px);top:6px;padding:4px 6px}
+  .b-me{left:6px}.b-mon{right:6px}
+  .b-mon .t,.b-me .t{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition:none!important}}
+</style>
+
+<style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font-size:14px}img{max-width:100%}</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="world" aria-label="Castle map. Use WASD or arrow keys, or click to walk."></canvas>
+  <div id="fade"></div>
+
+  <div class="hud" id="hud-me" hidden>
+    <canvas id="hud-portrait" width="104" height="104"></canvas>
+    <div class="who">
+      <div class="nm"><b id="hud-name">Hero</b><span id="hud-lv">LV 1</span></div>
+      <div class="bar hp"><i id="hud-hp"></i><span id="hud-hp-t"></span></div>
+      <div class="bar xp"><i id="hud-xp"></i></div>
+      <div class="inv"><button id="inv-potion" title="Drink a healing potion">Potions <b id="inv-potion-n">0</b></button><button id="inv-hint" disabled title="Use hints during a battle">Hints <b id="inv-hint-n">0</b></button></div>
+    </div>
+  </div>
+  <div class="hud" id="hud-floor" hidden>
+    <div class="fl" id="hud-floor-n">FLOOR 1</div>
+    <div class="zn" id="hud-zone">Sapphire Dungeon</div>
+    <canvas id="minimap" width="150" height="110" aria-label="Floor map"></canvas>
+  </div>
+  <div class="hud" id="ready-pill" hidden><button class="btn gold" id="ready-open">Stairs found · vote</button></div>
+  <div class="hud" id="party" hidden></div>
+  <nav class="hud" id="dock-left" hidden><button class="btn" id="btn-menu">Back to menu</button></nav>
+  <nav class="hud" id="dock" hidden>
+    <button class="btn" id="btn-class" hidden>Class</button>
+    <button class="btn" id="btn-help">Help</button>
+    <button class="btn" id="btn-sound" aria-pressed="true">Sound on</button>
+  </nav>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="banner"><div><b id="banner-a">FLOOR 1</b><span id="banner-b">Sapphire Dungeon</span></div></div>
+
+  <!-- Title -->
+  <div class="modal" id="title">
+    <div class="panel">
+      <div class="eyebrow">A class adventure in 41 floors</div>
+      <h1 class="logo">Grammar Castle</h1>
+      <p class="tag">Climb from the dungeon to the top of the tower. Beat monsters with good grammar. Find the stairs together.</p>
+      <label for="player-name">Your hero's name
+        <input id="player-name" maxlength="14" autocomplete="off" placeholder="Type your name">
+      </label>
+      <div class="heroes" role="group" aria-label="Choose a hero">
+        <button class="hero-card" id="pick-knight" data-hero="knight" aria-pressed="true"><span class="art"><img src="a/full_knight.webp" alt=""></span><b>Starblade</b><small>Knight of the star sword</small></button>
+        <button class="hero-card" id="pick-mage" data-hero="mage" aria-pressed="false"><span class="art"><img src="a/full_mage.webp" alt=""></span><b>Rosebloom</b><small>Mage of the ruby staff</small></button>
+        <button class="hero-card" id="pick-lilac" data-hero="lilac" aria-pressed="false"><span class="art"><img src="a/full_lilac.webp" alt=""></span><b>Sweetlillac</b><small>Healer of the floral spell</small></button>
+        <button class="hero-card" id="pick-crim" data-hero="crim" aria-pressed="false"><span class="art"><img src="a/full_crim.webp" alt=""></span><b>Crimson</b><small>Assassin of the first order</small></button>
+      </div>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <span id="net-line">Loading the castle…</span>
+        <button class="btn gold" id="start-btn" disabled>Enter the castle</button>
+      </div>
+      <section class="board" aria-labelledby="board-title">
+        <div class="board-head"><h2 id="board-title">Scoreboard</h2><span class="live" id="board-live">Live</span></div>
+        <div class="tbl-wrap board-wrap"><table>
+          <thead><tr><th class="num">#</th><th>Hero</th><th class="num">Battles</th><th class="num">Correct</th><th class="num">Level</th></tr></thead>
+          <tbody id="board-body"></tbody>
+        </table></div>
+        <p class="board-empty" id="board-empty" hidden>No adventurers yet. Enter the castle to get on the board!</p>
+      </section>
+      <p class="keys">Move with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows, or tap the floor. Walk into a monster to battle. Answer with <kbd>1</kbd>–<kbd>4</kbd>.</p>
+    </div>
+  </div>
+
+  <!-- Battle -->
+  <section id="battle" hidden aria-label="Battle">
+    <div id="stage-wrap">
+      <canvas id="stage"></canvas>
+      <div class="b-me"><div class="t"><b id="b-me-name">You</b><span id="b-me-lv">LV 1</span></div><div class="bar hp"><i id="b-me-hp"></i><span id="b-me-hp-t"></span></div></div>
+      <div class="b-mon"><div class="t"><b id="b-mon-name">Slime</b><span id="b-mon-lv">LV 1</span></div><div class="bar hp"><i id="b-mon-hp"></i><span id="b-mon-hp-t"></span></div></div>
+      <div id="b-allies"></div>
+    </div>
+    <div class="b-card">
+      <div class="b-head"><span class="eyebrow" id="b-topic">Grammar</span><span id="b-streak"></span></div>
+      <p class="b-q" id="b-q"></p>
+      <div class="b-opts" id="b-opts"></div>
+      <div id="b-fb" hidden>
+        <p id="b-fb-text"></p>
+        <div class="row"><button class="btn gold" id="b-continue">Continue <kbd>Enter</kbd></button></div>
+      </div>
+      <div class="b-foot"><div class="b-items"><button class="btn" id="b-use-hint">Use hint <kbd>H</kbd></button><button class="btn" id="b-use-potion">Drink potion <kbd>P</kbd></button></div><button class="btn ghost" id="b-flee">Run away</button></div>
+      <small id="b-hint" style="color:var(--dim);font-size:13px">Pick the word that completes the sentence.</small>
+    </div>
+  </section>
+
+  <!-- Ready check -->
+  <div class="modal" id="ready" hidden>
+    <div class="panel" role="dialog" aria-labelledby="ready-title">
+      <div class="eyebrow" id="ready-eyebrow">Staircase found</div>
+      <h2 id="ready-title">Climb to Floor 2?</h2>
+      <p id="ready-sub">Everyone must be ready before the class climbs.</p>
+      <ul id="ready-list"></ul>
+      <div class="row"><button class="btn gold" id="ready-yes">I'm ready</button><button class="btn ghost" id="ready-no">Not yet</button><button class="btn ghost" id="ready-skip" hidden>Climb now (teacher)</button></div>
+    </div>
+  </div>
+
+  <!-- Class panel -->
+  <div class="modal" id="classp" hidden>
+    <div class="panel">
+      <div class="eyebrow">Adventurers</div>
+      <h2>Your class</h2>
+      <div class="tbl-wrap"><table><thead><tr><th>Hero</th><th>Level</th><th>Accuracy</th><th>Practice</th><th>Status</th></tr></thead><tbody id="class-body"></tbody></table></div>
+      <div class="teacher" id="teacher" hidden>
+        <div class="eyebrow">Teacher controls</div>
+        <div class="row" style="align-items:center"><label for="t-floor">Move class to floor</label><input id="t-floor" type="number" min="1" max="41" value="1"><button class="btn" id="t-move">Move</button></div>
+        <div class="row"><button class="btn" id="t-skip">Skip the ready vote</button><button class="btn" id="t-reset">Restart from floor 1</button></div>
+        <p id="t-note" style="color:var(--dim);font-size:13px"></p>
+      </div>
+      <div class="row"><button class="btn gold" id="class-close">Close</button></div>
+    </div>
+  </div>
+
+  <!-- Help -->
+  <div class="modal" id="help" hidden>
+    <div class="panel">
+      <div class="eyebrow">How to play</div>
+      <h2>Climbing Grammar Castle</h2>
+      <ul>
+        <li>Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys, or tap where you want to go.</li>
+        <li>Doors lead to other rooms. Every room you open appears on the map for the whole class.</li>
+        <li>Walk into a monster to battle. Each correct answer is a hit. Three in a row is a critical hit.</li>
+        <li>Open chests to find hint scrolls and healing potions. In a battle, a hint removes two wrong answers. A potion heals half your health. Some chests on higher floors bite back!</li>
+        <li>A wrong answer lets the monster attack, and shows you the rule. Read it, it helps next time.</li>
+        <li>Classmates can fight the same monster. Every hit counts for the team.</li>
+        <li>Crimson is an assassin. His critical hits strike for 3 instead of 2.</li>
+        <li>Sweetlillac is a healer. Every third correct answer in a row blooms flowers that heal her and every classmate fighting the same monster.</li>
+        <li>The staircase is guarded. Beat the guardian, then step on the stairs. Everyone must be ready before the class climbs.</li>
+        <li>Floors 1–10 are the dungeon, 11–20 the cellars, 21–30 the castle, 31–40 the tower. Something waits on floor 41.</li>
+      </ul>
+      <div class="row"><button class="btn gold" id="help-close">Back to the castle</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="net-firebase.js"></script>
+<script>
+'use strict';
+const META = {"props":{"blue":{"stairs":[0,0,125,291],"sdoorA":[127,0,77,161],"sdoorB":[206,0,75,157],"chain2":[283,0,26,148],"door":[311,0,100,116],"gate":[413,0,102,116],"torch2":[517,0,31,91],"chain1":[550,0,35,89],"altar":[587,0,76,84],"torch":[665,0,30,82],"crate3":[697,0,65,81],"crate2":[764,0,71,80],"rubble4":[837,0,93,80],"chestopen":[932,0,82,77],"web1":[0,293,70,76],"crate1":[72,293,70,76],"chest":[144,293,82,75],"pillar":[228,293,31,73],"brokencrate":[261,293,70,70],"rubble1":[333,293,98,70],"rubble2":[433,293,68,67],"web2":[503,293,44,59],"rubble5":[549,293,47,51],"rubble3":[598,293,54,50],"planks":[654,293,75,40]},"red":{"stairs":[0,0,118,241],"sdoorB":[120,0,70,147],"sdoorA":[192,0,73,143],"banner1":[267,0,68,128],"bookshelf":[337,0,93,127],"cage":[432,0,54,126],"candles":[488,0,39,109],"chandelier":[529,0,76,109],"door":[607,0,95,108],"gate":[704,0,98,108],"skullaltar":[804,0,93,108],"banner2":[899,0,49,105],"barrel3":[950,0,62,100],"chain1":[0,243,101,98],"shelf":[103,243,94,92],"table":[199,243,121,84],"spikes":[322,243,94,80],"barrel":[418,243,58,78],"barrel2":[478,243,57,76],"torch2":[537,243,19,75],"web2":[558,243,49,75],"crate3":[609,243,53,73],"torch":[664,243,20,72],"rubble2":[686,243,64,71],"chest":[752,243,97,71],"web1":[851,243,54,70],"crate1":[907,243,69,68],"rubble1":[0,343,60,67],"rubble3":[62,343,62,66],"table2":[126,343,113,62],"brazier":[241,343,42,61],"crate2":[285,343,56,60],"bench":[343,343,98,60],"cloth":[443,343,78,56],"sack":[523,343,62,56],"candleshelf":[587,343,59,41]},"castle":{"spiral":[0,0,160,186],"runner":[162,0,50,170],"stairs":[214,0,88,163],"cage":[304,0,53,161],"bookshelf":[359,0,118,155],"desk":[479,0,107,130],"banner1":[588,0,52,129],"banner2":[642,0,52,129],"sdoorB":[696,0,53,128],"sdoorA":[751,0,61,126],"throne":[814,0,74,120],"pillar":[890,0,41,116],"door":[0,188,99,111],"gate":[101,188,97,111],"chandelier":[200,188,57,99],"feasttable":[259,188,168,99],"crates":[429,188,104,93],"bench":[535,188,104,88],"rug":[641,188,120,88],"candelabra2":[763,188,42,87],"candelabra":[807,188,33,85],"rubble1":[842,188,66,85],"chain1":[0,301,143,84],"skulltable":[145,301,98,84],"chest":[245,301,87,81],"rubble2":[334,301,83,78],"books":[419,301,67,72],"barrel2":[488,301,53,71],"booktable":[543,301,112,69],"bench2":[657,301,122,68],"chair":[781,301,37,66],"barrel":[820,301,47,65],"vase":[869,301,45,57]},"tower":{"spiral":[0,0,156,227],"stairs":[158,0,109,200],"bookshelf":[269,0,100,169],"bookshelf2":[371,0,108,161],"banner2":[481,0,121,158],"rack":[604,0,104,154],"torch":[710,0,35,153],"curtain":[747,0,83,142],"door":[832,0,108,140],"gate":[0,229,110,140],"sdoorB":[112,229,61,138],"sdoorA":[175,229,71,137],"banner1":[248,229,66,134],"statue":[316,229,54,117],"cage":[372,229,55,117],"candelabra":[429,229,40,113],"rug2":[471,229,96,109],"pillar":[569,229,48,108],"torch2":[619,229,28,107],"chandelier":[649,229,64,105],"table2":[715,229,101,102],"plant":[818,229,57,101],"globe":[877,229,67,95],"rug":[0,371,157,92],"rubble2":[159,371,115,91],"table3":[276,371,114,89],"crate1":[392,371,77,89],"table1":[471,371,98,86],"candelabra2":[571,371,37,85],"crate2":[610,371,70,82],"chest":[682,371,85,81],"chest2":[769,371,74,75],"barrel":[845,371,56,75],"barrel2":[903,371,55,66],"bench":[0,465,139,60]}},"heroes":{"knight":{"rects":{"cast_3":[0,0,109,124,59.0,124,1.0],"cast_2":[111,0,81,122,40.0,122,1.0],"cast_4":[194,0,93,118,44.0,118,1.0],"attack_1":[289,0,126,116,59.0,116,1.0],"attack_3":[417,0,138,115,57.0,115,1.0],"cast_6":[557,0,99,114,56.0,114,1.0],"portrait_0":[658,0,139,114,69.0,114,1.0],"portrait_1":[799,0,141,114,71.0,114,1.0],"attack_2":[942,0,125,113,53.0,113,1.0],"cast_5":[1069,0,87,113,45.0,113,1.0],"attack_0":[1158,0,104,110,51.0,110,1.0],"cast_1":[1264,0,115,110,48.0,110,1.0],"cast_0":[1381,0,97,107,38.0,107,1.0],"idle_0":[1480,0,77,105,39.0,105,1.0],"idle_1":[1559,0,73,105,35.0,105,1.0],"idle_2":[1634,0,73,105,35.0,105,1.0],"idle_4":[1709,0,73,105,35.0,105,1.0],"idle_5":[1784,0,77,105,38.0,105,1.0],"wdown_2":[1863,0,60,105,30.0,105,1.0],"wup_0":[1925,0,71,105,35.0,105,1.0],"wdown_1":[0,126,62,104,30.0,104,1.0],"wup_4":[64,126,68,104,34.0,104,1.0],"wup_6":[134,126,69,104,34.0,104,1.0],"idle_3":[205,126,74,103,36.0,103,1.0],"wright_1":[281,126,71,103,36.0,103,1.0],"wright_2":[354,126,71,102,35.0,102,1.0],"wright_3":[427,126,72,102,36.0,102,1.0],"wdown_5":[501,126,63,101,30.0,101,1.0],"die_2":[566,126,72,95,35.0,95,1.0],"die_3":[640,126,75,92,36.0,92,1.0],"hurt_0":[717,126,74,91,39.0,91,1.0],"hurt_4":[793,126,72,91,36.0,91,1.0],"die_1":[867,126,73,91,35.0,91,1.0],"hurt_1":[942,126,75,90,37.0,90,1.0],"hurt_2":[1019,126,74,90,37.0,90,1.0],"hurt_5":[1095,126,63,90,34.0,90,1.0],"die_0":[1160,126,74,89,37.0,89,1.0],"hurt_3":[1236,126,74,88,38.0,88,1.0],"die_4":[1312,126,78,86,37.0,86,1.0],"die_6":[1392,126,93,64,46.0,64,1.0],"die_5":[1487,126,92,63,45.0,63,1.0],"die_7":[1581,126,114,51,50.0,51,1.0]},"anims":{"down":["idle_0","idle_1","idle_2","idle_3","idle_4","idle_5"],"downWalk":["wdown_1","wdown_2","wdown_5","wdown_2"],"side":["wright_1"],"sideWalk":["wright_2","wright_1","wright_3","wright_1"],"up":["wup_0"],"upWalk":["wup_4","wup_0","wup_6","wup_0"],"attack":["attack_0","attack_1","attack_2","attack_3"],"hurt":["hurt_0","hurt_1","hurt_2","hurt_3","hurt_4","hurt_5"],"die":["die_0","die_1","die_2","die_3","die_4","die_5","die_6","die_7"],"cast":["cast_0","cast_1","cast_2","cast_3","cast_4","cast_5","cast_6"],"portrait":["portrait_0","portrait_1"]},"sideFaces":1},"mage":{"rects":{"cast_4":[0,0,128,137,76.0,137,1.0],"cast_3":[130,0,151,135,76.0,135,1.0],"cast_2":[283,0,144,132,57.0,132,1.0],"attack_1":[429,0,88,125,45.0,125,1.0],"attack_8":[519,0,90,123,45.0,123,1.0],"st0_idle1":[611,0,98,119,44.0,114,1.0],"st1_idle1":[711,0,98,119,44.0,114,1.0],"st0_idle9":[811,0,81,118,40.0,113,1.0],"st1_idle9":[894,0,81,118,40.0,113,1.0],"attack_2":[977,0,102,117,43.0,117,1.0],"attack_7":[1081,0,112,116,42.0,116,1.0],"attack_0":[1195,0,111,115,46.0,115,1.0],"idle_1":[1308,0,98,114,44.0,114,1.0],"idle_2":[1408,0,99,114,42.0,114,1.0],"portrait_1":[1509,0,127,114,63.0,114,1.0],"walk_1":[1638,0,101,113,43.0,113,1.0],"idle_9":[1741,0,81,113,40.0,113,1.0],"attack_5":[1824,0,95,113,31.0,113,1.0],"die_1":[1921,0,81,113,40.0,113,1.0],"portrait_0":[0,139,125,113,62.0,113,1.0],"walk_0":[127,139,101,112,42.0,112,1.0],"hurt_4":[230,139,96,112,44.0,112,1.0],"walk_5":[328,139,103,111,44.0,111,1.0],"attack_3":[433,139,122,111,58.0,111,1.0],"hurt_0":[557,139,102,111,44.0,111,1.0],"die_0":[661,139,99,111,42.0,111,1.0],"hurt_1":[762,139,104,110,42.0,110,1.0],"hurt_2":[868,139,87,109,34.0,109,1.0],"hurt_3":[957,139,98,109,40.0,109,1.0],"die_2":[1057,139,97,99,48.0,99,1.0],"die_3":[1156,139,94,85,46.0,85,1.0],"die_4":[1252,139,117,76,57.0,76,1.0],"die_5":[1371,139,122,54,57.0,54,1.0]},"anims":{"down":["idle_1","idle_2"],"downWalk":["st0_idle1","idle_1","st1_idle1","idle_1"],"side":["walk_0"],"sideWalk":["walk_5","walk_0","walk_1","walk_0"],"up":["idle_9"],"upWalk":["st0_idle9","idle_9","st1_idle9","idle_9"],"attack":["attack_0","attack_1","attack_2","attack_3","attack_5","attack_7","attack_8"],"hurt":["hurt_0","hurt_1","hurt_2","hurt_3","hurt_4"],"die":["die_0","die_1","die_2","die_3","die_4","die_5"],"cast":["cast_2","cast_3","cast_4"],"portrait":["portrait_0","portrait_1"]},"sideFaces":1},"lilac":{"rects":{"cast_4":[0,0,147,140,86.0,140,1.0],"st0_idle8":[149,0,97,134,47.0,128,1.0],"st1_idle8":[248,0,97,134,47.0,128,1.0],"st0_idle0":[347,0,97,129,49.0,123,1.0],"st1_idle0":[446,0,97,129,49.0,123,1.0],"lwleft_1":[545,0,104,129,51.0,129,1.0],"lwleft_3":[651,0,105,129,52.0,129,1.0],"idle_7":[758,0,94,129,46.0,129,1.0],"lwright_4":[854,0,104,128,52.0,128,1.0],"lwright_5":[960,0,101,128,51.0,128,1.0],"lwright_6":[1063,0,105,128,52.0,128,1.0],"lwright_7":[1170,0,106,128,52.0,128,1.0],"lwleft_2":[1278,0,106,128,50.0,128,1.0],"lwleft_4":[1386,0,108,128,54.0,128,1.0],"lwleft_5":[1496,0,104,128,50.0,128,1.0],"lwleft_6":[1602,0,105,128,51.0,128,1.0],"idle_8":[1709,0,97,128,47.0,128,1.0],"idle_3":[1808,0,95,127,47.0,127,1.0],"lwright_0":[1905,0,108,127,54.0,127,1.0],"lwright_2":[0,142,102,127,52.0,127,1.0],"lwright_3":[104,142,101,127,50.0,127,1.0],"lwleft_7":[207,142,108,127,54.0,127,1.0],"idle_1":[317,142,96,126,48.0,126,1.0],"idle_2":[415,142,93,126,46.0,126,1.0],"lwright_1":[510,142,98,126,49.0,126,1.0],"lwleft_0":[610,142,108,126,53.0,126,1.0],"portrait_0":[720,142,130,126,65.0,126,1.0],"portrait_2":[852,142,132,126,67.0,126,1.0],"cast_2":[986,142,109,125,55.0,125,1.0],"idle_0":[1097,142,97,123,49.0,123,1.0],"cast_0":[1196,142,110,123,56.0,123,1.0],"cast_1":[1308,142,112,123,55.0,123,1.0],"cast_6":[1422,142,113,123,56.0,123,1.0],"cast_7":[1537,142,112,123,54.0,123,1.0],"cast_3":[1651,142,116,122,58.0,122,1.0],"hurt_3":[1769,142,111,116,55.0,116,1.0],"hurt_2":[1882,142,108,114,53.0,114,1.0],"hurt_0":[0,271,108,113,52.0,113,1.0],"hurt_1":[110,271,109,113,53.0,113,1.0],"die_0":[221,271,123,102,61.0,102,1.0],"die_1":[346,271,127,86,71.0,86,1.0],"die_2":[475,271,137,86,74.0,86,1.0],"die_3":[614,271,127,78,68.0,78,1.0],"die_4":[743,271,119,73,64.0,73,1.0]},"anims":{"down":["idle_0","idle_1","idle_2","idle_3"],"downWalk":["st0_idle0","idle_0","st1_idle0","idle_0"],"side":["lwright_0"],"sideWalk":["lwright_0","lwright_1","lwright_2","lwright_3","lwright_4","lwright_5","lwright_6","lwright_7"],"sideL":["lwleft_0"],"sideWalkL":["lwleft_0","lwleft_1","lwleft_2","lwleft_3","lwleft_4","lwleft_5","lwleft_6","lwleft_7"],"up":["idle_7","idle_8"],"upWalk":["st0_idle8","idle_8","st1_idle8","idle_8"],"attack":["cast_0","cast_1","cast_2","cast_3"],"hurt":["hurt_0","hurt_1","hurt_2","hurt_3"],"die":["die_0","die_1","die_2","die_3","die_4"],"cast":["cast_4","cast_6","cast_7"],"portrait":["portrait_0","portrait_2"]},"sideFaces":1},"crim":{"rects":{"stand_0":[0,0,68,145,33.0,145,0.803448275862069],"stand_6":[70,0,82,145,39.0,145,0.803448275862069],"flip_stand_6":[154,0,82,145,42.0,145,0.803448275862069],"stand_8":[238,0,80,145,41.0,145,0.803448275862069],"cwback_0":[320,0,103,133,53.0,133,1.0],"cwback_1":[425,0,104,133,53.0,133,1.0],"portrait_0":[531,0,119,131,65.0,131,1.0],"portrait_1":[652,0,116,131,54.0,131,1.0],"attack_7":[770,0,116,129,50.0,129,0.803448275862069],"attack_3":[888,0,106,128,57.0,128,0.803448275862069],"hurt_1":[996,0,89,122,43.0,122,0.803448275862069],"cwfront_1":[1087,0,98,120,47.0,120,1.0],"attack_1":[1187,0,103,120,48.0,120,0.803448275862069],"attack_2":[1292,0,115,120,52.0,120,0.803448275862069],"hurt_0":[1409,0,93,120,40.0,120,0.803448275862069],"hurt_2":[1504,0,97,120,51.0,120,0.803448275862069],"die_0":[1603,0,75,120,37.0,120,0.803448275862069],"attack_8":[1680,0,84,120,37.0,120,0.803448275862069],"cwfront_0":[1766,0,94,119,46.0,119,1.0],"attack_5":[1862,0,85,119,40.0,119,0.803448275862069],"attack_4":[1949,0,82,118,38.0,118,0.803448275862069],"attack_6":[0,147,73,117,32.0,117,0.803448275862069],"cwright_0":[75,147,97,114,47.0,114,1.0],"cwleft_0":[174,147,101,114,51.0,114,1.0],"cwright_1":[277,147,88,113,41.0,113,1.0],"cwleft_1":[367,147,94,113,51.0,113,1.0],"die_1":[463,147,91,112,41.0,112,0.803448275862069],"die_3":[556,147,140,65,66.0,65,0.803448275862069],"die_2":[698,147,97,64,51.0,64,0.803448275862069]},"anims":{"down":["cwfront_0"],"downWalk":["cwfront_0","stand_0","cwfront_1","stand_0"],"side":["stand_6"],"sideWalk":["cwright_0","stand_6","cwright_1","stand_6"],"sideL":["flip_stand_6"],"sideWalkL":["cwleft_0","flip_stand_6","cwleft_1","flip_stand_6"],"up":["cwback_0"],"upWalk":["cwback_0","stand_8","cwback_1","stand_8"],"attack":["attack_1","attack_2","attack_3","attack_4","attack_5","attack_6","attack_7"],"hurt":["hurt_0","hurt_1","hurt_2"],"die":["die_0","die_1","die_2","die_3"],"cast":["attack_6","attack_7","attack_8"],"portrait":["portrait_0","portrait_1"]},"sideFaces":1}},"mons":{"puff":{"w":57,"h":63,"rows":{"idle":4,"attack":4,"hurt":4,"die":4}},"bat":{"w":58,"h":67,"rows":{"idle":4,"attack":4,"hurt":4,"die":4}},"slime":{"w":61,"h":62,"rows":{"idle":3,"attack":3,"hurt":3,"die":3}},"skeleton":{"w":58,"h":74,"rows":{"idle":4,"attack":4,"hurt":4,"die":4}},"mage":{"w":57,"h":78,"rows":{"idle":4,"attack":4,"hurt":4,"die":4}},"spider":{"w":84,"h":77,"rows":{"idle":3,"attack":3,"hurt":3,"die":3}},"troll":{"w":85,"h":84,"rows":{"idle":3,"attack":3,"hurt":3,"die":3}},"ghost":{"w":64,"h":73,"rows":{"idle":3,"attack":3,"hurt":3,"die":3}},"mimic":{"w":68,"h":73,"rows":{"idle":3,"attack":3,"hurt":3,"die":3}},"knight":{"w":57,"h":80,"rows":{"idle":4,"attack":4,"hurt":4,"die":4}}}};
+// [topic, sentence, answer, wrong1, wrong2, wrong3, explanation]
+const QBANK = [
+// ---------- Tier 0 · A1 · Floors 1–10 ----------
+[
+["be verbs","I ___ a student.","am","is","are","be","Use \"am\" with I: I am."],
+["be verbs","They ___ my friends.","are","is","am","be","Use \"are\" with they, we and you."],
+["be verbs","My mother ___ a nurse.","is","are","am","be","Use \"is\" with he, she, it and one person: My mother is."],
+["be verbs","___ you hungry?","Are","Is","Am","Do","Questions with be put the verb first: Are you…?"],
+["be verbs","The cats ___ not in the garden.","are","is","am","does","\"The cats\" is plural, so use \"are\"."],
+["articles","I have ___ apple.","an","a","the","some","Use \"an\" before a vowel sound: an apple."],
+["articles","She is ___ teacher.","a","an","the","—","Use \"a\" before a consonant sound: a teacher."],
+["articles","He waited for ___ hour.","an","a","—","many","\"Hour\" starts with a vowel sound (the h is silent), so: an hour."],
+["articles","It is ___ university in London.","a","an","—","any","\"University\" starts with a /j/ sound, so: a university."],
+["plurals","There are three ___ on the table.","boxes","boxs","box","boxies","Add -es after x, s, sh, ch: boxes."],
+["plurals","Two ___ are playing football.","children","childs","childrens","child","\"Child\" has an irregular plural: children."],
+["plurals","I bought five ___.","tomatoes","tomatos","tomato","tomatoe","Some words ending in -o add -es: tomatoes."],
+["plurals","How many ___ do you have?","teeth","tooths","tooth","teeths","\"Tooth\" has an irregular plural: teeth."],
+["this / these","___ books are mine.","These","This","That","It","Use \"these\" for plural things that are near."],
+["this / these","Look at ___ bird over there!","that","these","those","this","Use \"that\" for one thing that is far away."],
+["present simple","She ___ to school every day.","goes","go","going","gos","With he/she/it in the present simple, add -s or -es: goes."],
+["present simple","My brother ___ coffee.","doesn't like","don't like","not like","doesn't likes","Negative with he/she/it: doesn't + base verb (like)."],
+["present simple","___ your father work here?","Does","Do","Is","Are","Questions with he/she/it use \"Does\" + base verb."],
+["present simple","We ___ TV in the evening.","watch","watches","watching","are watch","With we, use the base verb: we watch."],
+["present simple","He ___ his homework after dinner.","does","do","dos","doing","\"Do\" becomes \"does\" with he/she/it."],
+["pronouns","This is my sister. ___ is ten.","She","Her","He","It","Use the subject pronoun \"she\" before the verb."],
+["pronouns","Can you help ___?","me","I","my","mine","After a verb, use the object pronoun: me."],
+["possessives","That is ___ bag. (it belongs to him)","his","he","him","he's","\"His\" shows that something belongs to him."],
+["possessives","The dog is eating ___ food.","its","it's","it","their","\"Its\" is possessive. \"It's\" means \"it is\"."],
+["possessives","This is ___ car.","my father's","my fathers","my father","my fathers'","Use 's to show that one person owns something."],
+["prepositions","The book is ___ the table.","on","in","at","under of","Use \"on\" for a surface."],
+["prepositions","I was born ___ 2012.","in","on","at","by","Use \"in\" with years and months."],
+["prepositions","The class starts ___ 9 o'clock.","at","in","on","by","Use \"at\" with clock times."],
+["prepositions","We have art ___ Monday.","on","in","at","to","Use \"on\" with days of the week."],
+["can","She ___ swim very well.","can","cans","can to","is can","\"Can\" never takes -s and is followed by the base verb."],
+["can","___ you speak French?","Can","Do can","Are","Does","Questions with can put \"can\" first: Can you…?"],
+["there is / are","There ___ a cat on the sofa.","is","are","be","have","Use \"there is\" with one thing."],
+["there is / are","There ___ many people in the park.","are","is","be","has","Use \"there are\" with plural nouns."],
+["question words","___ is your name?","What","Who","Where","How","Use \"what\" to ask about a thing or a name."],
+["question words","___ do you live?","Where","What","When","Who","Use \"where\" to ask about a place."],
+["question words","___ old are you?","How","What","Which","Why","Ask about age with \"How old…?\""],
+["have got","I ___ two brothers.","have got","has got","have get","am got","With I, use \"have got\"."],
+["have got","She ___ blue eyes.","has","have","is","haves","With he/she/it, use \"has\"."],
+["imperatives","___ the door, please.","Close","Closes","Closing","To close","Instructions use the base verb: Close the door."],
+["adjectives","It is a ___.","big house","house big","bigs house","house is big","In English the adjective comes before the noun: a big house."],
+],
+// ---------- Tier 1 · A2 · Floors 11–20 ----------
+[
+["past simple","Yesterday I ___ to the market.","went","go","goed","gone","\"Go\" is irregular. The past simple is \"went\"."],
+["past simple","She ___ a letter last night.","wrote","writed","written","writes","\"Write\" is irregular: write – wrote – written."],
+["past simple","We ___ the film. It was boring.","didn't like","didn't liked","not liked","don't liked","Negative past: didn't + base verb (like)."],
+["past simple","___ you see the match last night?","Did","Do","Were","Have","Past simple questions use \"Did\" + base verb."],
+["past simple","They ___ in Paris in 2019.","lived","live","lives","living","Regular verbs add -ed in the past: lived."],
+["past simple","He ___ the bus this morning.","missed","miss","has miss","missing","Use the past simple for a finished time: this morning (now over)."],
+["was / were","I ___ tired after the game.","was","were","am","be","Past of be: I/he/she/it was; you/we/they were."],
+["was / were","Where ___ you last night?","were","was","did","are","Use \"were\" with you."],
+["present continuous","Be quiet! The baby ___.","is sleeping","sleeps","sleeping","is sleep","Use am/is/are + -ing for actions happening now."],
+["present continuous","Look! It ___ outside.","is raining","rains","raining","rain","\"Look!\" shows it is happening now: present continuous."],
+["present continuous","What ___ you doing?","are","do","is","does","Present continuous question: are + you + -ing."],
+["present continuous","I ___ a bike every Saturday.","ride","am riding","rides","riding","For habits and routines, use the present simple."],
+["comparatives","My bag is ___ than yours.","heavier","more heavy","heavyer","heaviest","Short adjectives ending in -y change to -ier: heavier."],
+["comparatives","This book is ___ than that one.","more interesting","interestinger","most interesting","more interestinger","Long adjectives use \"more\": more interesting."],
+["comparatives","Today is ___ than yesterday.","better","gooder","more good","best","\"Good\" is irregular: good – better – best."],
+["comparatives","A car is ___ than a bike.","faster","more fast","fastest","fast","Short adjectives add -er: faster."],
+["superlatives","Mount Everest is the ___ mountain in the world.","highest","higher","most high","highiest","Short adjectives: the + -est."],
+["superlatives","She is the ___ student in our class.","most intelligent","intelligentest","more intelligent","most intelligentest","Long adjectives: the most + adjective."],
+["superlatives","That was the ___ day of my life!","worst","baddest","most bad","worse","\"Bad\" is irregular: bad – worse – worst."],
+["much / many","How ___ water do you drink?","much","many","lot","few","Use \"much\" with uncountable nouns like water."],
+["much / many","How ___ apples are in the box?","many","much","lot","little","Use \"many\" with countable plural nouns."],
+["much / many","There isn't ___ milk left.","much","many","a few","some","Uncountable + negative: not much."],
+["some / any","Have you got ___ brothers?","any","some","a","many of","Use \"any\" in most questions and negatives."],
+["some / any","I'd like ___ tea, please.","some","any","a","many","Use \"some\" in offers and requests."],
+["going to","Look at those clouds! It ___ rain.","is going to","will to","goes to","is going","Use \"going to\" for predictions from what you can see now."],
+["going to","I ___ visit my grandma next weekend.","am going to","going to","am go to","will going to","Plans: am/is/are + going to + base verb."],
+["frequency","She ___ late for class.","is never","never is","is ever","never be","Frequency adverbs go after the verb \"be\": is never."],
+["frequency","I ___ breakfast at 7.","usually have","have usually","usually has","am usually have","Frequency adverbs go before most main verbs: usually have."],
+["prepositions of time","My birthday is ___ the 5th of May.","on","in","at","by","Use \"on\" with dates."],
+["prepositions of time","I go to bed late ___ the weekend.","at","in","by","to","British English says \"at the weekend\" (American: \"on the weekend\")."],
+["prepositions of time","We study ___ the morning.","in","on","at","by","Use \"in\" with parts of the day: in the morning."],
+["object pronouns","I called Tom but he didn't answer ___.","me","I","my","mine","After a verb, use an object pronoun."],
+["object pronouns","These cookies are for you and ___.","me","I","myself","mine","After a preposition (for), use an object pronoun: me."],
+["adverbs","He drives very ___.","carefully","careful","carefuly","care","Adverbs describe verbs and often end in -ly."],
+["adverbs","She plays the piano ___.","well","good","goodly","best","The adverb of \"good\" is \"well\"."],
+["must / have to","You ___ wear a helmet on a motorbike. It's the law.","must","mustn't","don't have to","can't to","\"Must\" shows a strong rule or obligation."],
+["must / have to","You ___ run in the library!","mustn't","don't have to","must","not must","\"Mustn't\" means it is not allowed."],
+["should","You look tired. You ___ go to bed early.","should","should to","shoulds","must to","Use \"should\" + base verb to give advice."],
+["countable","Can you give me some ___?","advice","advices","an advice","a advice","\"Advice\" is uncountable: some advice, never \"advices\"."],
+["past continuous","I ___ TV when the phone rang.","was watching","watched","am watching","were watching","Use was/were + -ing for a longer action interrupted by a short one."],
+],
+// ---------- Tier 2 · B1 · Floors 21–30 ----------
+[
+["present perfect","I ___ this film three times.","have seen","saw","have saw","seen","Use have/has + past participle for experiences up to now."],
+["present perfect","She ___ to Japan. She loved it.","has been","has gone","has went","is been","\"Has been\" means she went and came back."],
+["present perfect","___ you ever eaten sushi?","Have","Did","Do","Has","\"Ever\" questions about life experience use \"Have you ever…?\""],
+["present perfect","I ___ my keys. I can't find them!","have lost","lost","have lose","am losing","Present perfect shows a past action with a result now."],
+["present perfect vs past","We ___ to Spain last summer.","went","have gone","have been","go","\"Last summer\" is a finished time, so use the past simple."],
+["present perfect vs past","He ___ here since 2020.","has lived","lived","lives","is living","Use present perfect with \"since\" for something that started in the past and continues."],
+["for / since","I have known her ___ ten years.","for","since","from","during","Use \"for\" with a length of time."],
+["for / since","They have been married ___ June.","since","for","from","in","Use \"since\" with a starting point in time."],
+["first conditional","If it rains, we ___ at home.","will stay","stay will","would stay","stayed","First conditional: If + present, will + base verb."],
+["first conditional","If you ___ hard, you will pass.","study","will study","studied","studies","After \"if\" in the first conditional, use the present simple."],
+["will / going to","A: The phone is ringing! B: I ___ answer it.","'ll","am going to","going to","answer","Use \"will\" for a decision made at the moment of speaking."],
+["will / going to","I think robots ___ teach in schools one day.","will","are","going","would to","Use \"will\" for general predictions about the future."],
+["used to","When I was young, I ___ play with dolls.","used to","use to","was used to","am used to","\"Used to\" + base verb describes past habits that stopped."],
+["used to","Did you ___ live in the city?","use to","used to","using to","uses to","After \"did\", use \"use to\" without -d."],
+["relative clauses","That's the woman ___ helped me.","who","which","whose","what","Use \"who\" for people."],
+["relative clauses","This is the phone ___ I bought yesterday.","which","who","whom","what","Use \"which\" or \"that\" for things."],
+["relative clauses","He's the boy ___ dog bit me.","whose","who's","who","which","\"Whose\" shows possession in a relative clause."],
+["relative clauses","That's the town ___ I grew up.","where","which","what","who","Use \"where\" for places."],
+["gerund / infinitive","I enjoy ___ books.","reading","to read","read","reads","After \"enjoy\", use the -ing form."],
+["gerund / infinitive","She decided ___ a new job.","to find","finding","find","found","After \"decide\", use to + base verb."],
+["gerund / infinitive","He is good at ___.","drawing","to draw","draw","draws","After a preposition (at), use the -ing form."],
+["gerund / infinitive","I'm looking forward to ___ you.","seeing","see","to see","saw","\"Look forward to\" ends in a preposition, so use -ing."],
+["too / enough","This coffee is too hot ___.","to drink","for drink","drink","drinking","Use too + adjective + to + verb."],
+["too / enough","He isn't ___ to drive.","old enough","enough old","too old","old too","\"Enough\" comes after adjectives: old enough."],
+["passive","English ___ all over the world.","is spoken","speaks","is speaking","spoke","Present passive: is/are + past participle."],
+["passive","The bridge ___ in 1890.","was built","built","is built","was build","Past passive: was/were + past participle."],
+["passive","The letters ___ every morning.","are delivered","deliver","are delivering","delivered","Plural subject + present passive: are delivered."],
+["modals","You ___ be tired after that long trip.","must","should to","can to","have","\"Must\" shows that you are almost sure something is true."],
+["modals","It ___ rain later, so take an umbrella.","might","must to","shall to","is","\"Might\" shows that something is possible."],
+["modals","You ___ pay. The museum is free.","don't have to","mustn't","haven't to","not have","\"Don't have to\" means it is not necessary."],
+["say / tell","She ___ me a funny story.","told","said","talked","spoke","\"Tell\" takes a person directly: tell someone something."],
+["say / tell","He ___ that he was busy.","said","told","talked","spoke to","\"Say\" does not need a person: he said that…"],
+["so / such","It was ___ a beautiful day!","such","so","very","too","Use \"such\" (a/an) + adjective + noun."],
+["so / such","The test was ___ difficult.","so","such","such a","too much","Use \"so\" + adjective alone."],
+["past perfect","When we arrived, the film ___.","had already started","already started","has already started","was already start","Past perfect shows something happened before another past moment."],
+["quantifiers","There are ___ chairs. We need more.","too few","too little","too much","enough of","Use \"few\" with countable nouns; \"too few\" means not enough."],
+["quantifiers","I have ___ time, so let's hurry.","little","few","a few","many","Use \"little\" with uncountable nouns like time."],
+["question tags","You're from Brazil, ___?","aren't you","are you","don't you","isn't it","Positive statement → negative tag with the same verb: aren't you?"],
+["question tags","She can't swim, ___?","can she","can't she","does she","is she","Negative statement → positive tag: can she?"],
+["prepositions","It depends ___ the weather.","on","of","from","at","The verb \"depend\" is followed by \"on\"."],
+],
+// ---------- Tier 3 · B2 · Floors 31–41 ----------
+[
+["second conditional","If I ___ rich, I would travel the world.","were","am","will be","would be","Second conditional: If + past simple. \"Were\" is used for all persons in formal English."],
+["second conditional","If she had more time, she ___ a new language.","would learn","will learn","learns","learned","Second conditional result: would + base verb."],
+["third conditional","If you had told me, I ___ you.","would have helped","would help","will have helped","had helped","Third conditional: If + past perfect, would have + past participle."],
+["third conditional","If we ___ earlier, we wouldn't have missed the train.","had left","left","would leave","have left","Imagined past: If + had + past participle."],
+["mixed conditional","If I had studied medicine, I ___ a doctor now.","would be","would have been","will be","am","Mixed conditional: a past condition with a present result."],
+["wish","I wish I ___ taller.","were","am","will be","would","Wishes about the present use the past simple: I wish I were…"],
+["wish","I wish I ___ that. I'm sorry.","hadn't said","didn't say","wouldn't say","haven't said","Regrets about the past: wish + past perfect."],
+["wish","I wish you ___ making that noise!","would stop","stopped","stop","will stop","\"Wish + would\" complains about someone's annoying behaviour."],
+["reported speech","\"I am tired.\" → She said she ___ tired.","was","is","has been","were","Reported speech moves the tense back: am → was."],
+["reported speech","\"I will call you.\" → He said he ___ call me.","would","will","shall","can","In reported speech, \"will\" becomes \"would\"."],
+["reported speech","\"Where do you live?\" → She asked me where I ___.","lived","did live","do live","was live","Reported questions use statement word order: where I lived."],
+["reported speech","\"Don't touch it!\" → He told me ___ it.","not to touch","don't touch","to not touching","no touch","Reported commands: tell someone (not) to + verb."],
+["passive (advanced)","The report ___ by Friday.","will have been finished","will finish","is finishing","has finished","Future perfect passive: will have been + past participle."],
+["passive (advanced)","The house ___ at the moment.","is being painted","is painting","is painted","has been paint","Present continuous passive: is being + past participle."],
+["passive (advanced)","He is said ___ very rich.","to be","being","that he is","be","\"He is said to be…\" is a formal passive reporting structure."],
+["causative","I'm going to ___ my hair cut.","have","make","do","let","\"Have something done\" means another person does it for you."],
+["modal deduction","He's not here. He ___ gone home.","must have","must","can have","should","Strong guess about the past: must have + past participle."],
+["modal deduction","She ___ seen us. She didn't wave.","can't have","mustn't have","shouldn't","can't","\"Can't have\" means you are sure something did not happen."],
+["modal deduction","You ___ told me! I would have helped.","should have","must have","would","could","\"Should have\" expresses regret or criticism about the past."],
+["past perfect continuous","She was tired because she ___ all day.","had been working","has been working","was worked","had worked been","Past perfect continuous shows a long activity before a past moment."],
+["future continuous","This time tomorrow, I ___ on a beach.","will be lying","will lie","am lying","lie","Future continuous: will be + -ing for an action in progress at a future time."],
+["future perfect","By 2030, they ___ the new station.","will have built","will build","have built","are building","Future perfect: will have + past participle, finished before a future time."],
+["inversion","Never ___ such a beautiful view.","have I seen","I have seen","I saw","did I saw","After negative adverbs like \"never\" at the start, invert subject and verb."],
+["inversion","Not only ___ late, but he also forgot his books.","was he","he was","he is","did he was","\"Not only\" at the start causes inversion: was he."],
+["used to / be used to","I ___ getting up early now. It's easy.","am used to","used to","use to","am used to get","\"Be used to + -ing\" means something is familiar or normal for you."],
+["used to / be used to","It took weeks to ___ the cold weather.","get used to","use to","used to","be use to","\"Get used to\" describes the process of becoming familiar."],
+["phrasal verbs","Can you ___ my cat while I'm away?","look after","look for","look up","look out","\"Look after\" means take care of."],
+["phrasal verbs","The meeting was ___ because of the storm.","called off","called up","called on","called in","\"Call off\" means cancel."],
+["phrasal verbs","I ran ___ an old friend at the station.","into","over","out","off","\"Run into\" means meet by chance."],
+["phrasal verbs","We have ___ of milk. Can you buy some?","run out","run off","run over","run down","\"Run out of\" means have none left."],
+["articles (advanced)","___ honesty is very important.","—","The","A","An","Abstract nouns in general statements take no article."],
+["articles (advanced)","She plays ___ violin beautifully.","the","a","—","an","Use \"the\" with musical instruments: play the violin."],
+["relative clauses (advanced)","My brother, ___ lives in Rome, is a chef.","who","that","which","whom he","In non-defining clauses (with commas), use \"who\", never \"that\"."],
+["relative clauses (advanced)","The man ___ I spoke was very kind.","to whom","whom","to who","which to","Formal style puts the preposition before \"whom\"."],
+["linking words","___ the rain, we went for a walk.","Despite","Although","However","Even","\"Despite\" is followed by a noun: despite the rain."],
+["linking words","___ it was late, she kept working.","Although","Despite","In spite of","However","\"Although\" is followed by a full clause (subject + verb)."],
+["linking words","He was ill. ___, he went to work.","Nevertheless","Although","Despite","Because","\"Nevertheless\" links two sentences and shows contrast."],
+["gerund / infinitive (advanced)","I remember ___ the door, but now it's open!","locking","to lock","lock","locked","\"Remember + -ing\" is about a memory of a past action."],
+["gerund / infinitive (advanced)","Please remember ___ the lights when you leave.","to turn off","turning off","turn off","turned off","\"Remember + to\" is about a future duty."],
+["unless","You won't pass ___ you study.","unless","if","when","provided","\"Unless\" means \"if not\"."],
+["subjunctive","The teacher insisted that he ___ the test again.","take","takes","taking","will take","After \"insist that\", formal English uses the base verb (subjunctive)."],
+],
+];
+
+
+// ---------- utilities ----------
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function hashStr(s) { let h = 2166136261 >>> 0; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0 } return h }
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
+const pick = (r, a) => a[Math.floor(r() * a.length)];
+function shuffle(a, r = Math.random) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] } return a }
+function deepMerge(t, s) { for (const k in s) { const v = s[k]; if (v && typeof v === 'object' && !Array.isArray(v)) { if (!t[k] || typeof t[k] !== 'object') t[k] = {}; deepMerge(t[k], v) } else t[k] = v } return t }
+const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch { return d } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch { } } };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const cleanName = s => (String(s || '').replace(/[^\p{L}\p{N} _.'-]/gu, '').trim().slice(0, 14)) || 'Adventurer';
+
+// ---------- world data ----------
+const ROOMS = {
+  blue:    { img: 'room_blue',    tile: 43, floor: [80, 102, 420, 350], doors: { n: [250, 100], s: [250, 356], w: [52, 226], e: [448, 226] }, blocks: [] },
+  redbase: { img: 'room_redbase', tile: 43, floor: [80, 104, 420, 396], doors: { n: [250, 100], s: [250, 402], w: [52, 250], e: [446, 250] }, blocks: [] },
+  brown:   { img: 'room_brown',   tile: 40, floor: [34, 106, 328, 316], doors: { n: [222, 100], s: [178, 322], w: [16, 262], e: [346, 262] }, blocks: [[20, 50, 128, 150], [248, 50, 350, 152], [20, 150, 64, 238]], sGap: true },
+  moss:    { img: 'room_moss',    tile: 40, floor: [46, 104, 318, 350], doors: { n: [180, 100], s: [180, 356], w: [22, 228], e: [342, 228] }, blocks: [], sGap: true },
+  castle:  { img: 'room_castle',  tile: 60, floor: [120, 218, 766, 788], doors: { n: [442, 206], s: [442, 800], w: [74, 500], e: [812, 500] }, blocks: [] },
+  tower:   { img: 'room_tower',   tile: 52, floor: [74, 194, 686, 558], doors: { n: [380, 182], s: [380, 566], w: [44, 440], e: [716, 440] }, blocks: [] },
+};
+const ZONES = [
+  { key: 'blue',   from: 1,  to: 10, name: 'Sapphire Dungeon', rooms: ['blue'], props: 'blue', mons: ['puff', 'slime', 'bat'], tier: 0, light: '120,180,255', bg: '#070d1c', grid: [3, 3], dark: .30 },
+  { key: 'red',    from: 11, to: 20, name: 'Crimson Cellars',  rooms: ['redbase', 'brown', 'moss'], props: 'red', mons: ['bat', 'spider', 'skeleton', 'slime'], mimic: true, tier: 1, light: '255,150,70', bg: '#120b0b', grid: [4, 3], dark: .30 },
+  { key: 'castle', from: 21, to: 30, name: 'Castle Halls',     rooms: ['castle'], props: 'castle', mons: ['skeleton', 'mage', 'ghost', 'troll'], mimic: true, tier: 2, light: '255,200,120', bg: '#140e10', grid: [4, 3], dark: .12 },
+  { key: 'tower',  from: 31, to: 40, name: 'Moonlit Tower',    rooms: ['tower'], props: 'tower', mons: ['ghost', 'mage', 'troll', 'knight'], mimic: true, tier: 3, light: '140,200,255', bg: '#0a0e1c', grid: [3, 4], dark: .20 },
+  { key: 'summit', from: 41, to: 41, name: 'The Summit',       rooms: ['tower'], props: 'tower', mons: ['knight', 'mage'], tier: 3, light: '200,130,255', bg: '#100818', grid: [1, 2], dark: .28, boss: true, tint: 'rgba(110,20,90,.30)' },
+];
+const zoneOf = n => ZONES.find(z => n >= z.from && n <= z.to) || ZONES[0];
+const DECOR = {
+  blue:   { wall: ['torch', 'torch2', 'chain1', 'chain2', 'web1', 'web2', 'torch'], floor: ['crate1', 'crate2', 'crate3', 'brokencrate', 'rubble1', 'rubble2', 'rubble3', 'rubble4', 'rubble5', 'pillar', 'altar'], decal: ['planks'], chest: 'chest', chestOpen: 'chestopen', stairs: 'stairs', stairsH: 3.0, lights: { torch: 1, torch2: 1 } },
+  red:    { wall: ['torch', 'torch2', 'banner1', 'banner2', 'cloth', 'chain1', 'web1', 'web2', 'candleshelf', 'torch'], floor: ['barrel', 'barrel2', 'barrel3', 'crate1', 'crate2', 'crate3', 'sack', 'bench', 'table', 'table2', 'shelf', 'bookshelf', 'cage', 'rubble1', 'rubble2', 'rubble3', 'skullaltar', 'brazier', 'spikes', 'candles'], decal: [], chest: 'chest', stairs: 'stairs', stairsH: 3.0, lights: { torch: 1, torch2: 1, brazier: 1, candles: 1, candleshelf: 1, skullaltar: 1 } },
+  castle: { wall: [], floor: ['bookshelf', 'desk', 'booktable', 'bench', 'bench2', 'barrel', 'barrel2', 'crates', 'throne', 'chair', 'books', 'vase', 'rubble1', 'pillar', 'feasttable', 'candelabra', 'candelabra2', 'skulltable', 'cage', 'rubble2'], decal: ['rug', 'runner'], chest: 'chest', stairs: 'spiral', stairsH: 3.4, lights: { candelabra: 1, candelabra2: 1, feasttable: 1, skulltable: 1, desk: 1 } },
+  tower:  { wall: [], floor: ['bookshelf', 'bookshelf2', 'table1', 'table2', 'table3', 'plant', 'globe', 'barrel', 'barrel2', 'crate1', 'crate2', 'statue', 'rack', 'cage', 'rubble2', 'bench', 'pillar', 'candelabra', 'candelabra2', 'torch', 'banner2'], decal: ['rug', 'rug2'], chest: 'chest2', stairs: 'spiral', stairsH: 3.4, lights: { candelabra: 1, candelabra2: 1, torch: 1, torch2: 1 } },
+};
+const FLAT = new Set(['rug', 'rug2', 'runner']);
+// how much of a prop's picture is its footprint on the floor (seen from above at 3/4)
+const LOW = new Set(['rubble1', 'rubble2', 'rubble3', 'rubble4', 'rubble5', 'altar', 'crate1', 'crate2', 'crate3', 'brokencrate', 'crates', 'planks', 'chest', 'chest2', 'barrel', 'barrel2', 'barrel3', 'sack', 'books', 'vase', 'spikes']);
+const TALL = new Set(['bookshelf', 'bookshelf2', 'shelf', 'cage', 'rack', 'statue', 'pillar', 'candelabra', 'candelabra2', 'candles', 'throne', 'chair', 'plant', 'globe', 'torch', 'banner2', 'brazier', 'desk', 'skullaltar']);
+const footDepth = (k, h, t) => LOW.has(k) ? h * .9 : TALL.has(k) ? Math.min(h * .3, t * .9) : h * .6;
+const MONS = {
+  puff:     { name: 'Puffly', h: 1.05, hits: 2, dmg: .14, xp: 12 },
+  slime:    { name: 'Jelly', h: 1.0, hits: 2, dmg: .16, xp: 14 },
+  bat:      { name: 'Batsy', h: 1.1, hits: 2, dmg: .17, xp: 15, fly: 1 },
+  spider:   { name: 'Giant Spider', h: 1.3, hits: 3, dmg: .18, xp: 18 },
+  skeleton: { name: 'Armoured Skeleton', h: 1.5, hits: 3, dmg: .2, xp: 20 },
+  mimic:    { name: 'Mimic Chest', h: 1.25, hits: 3, dmg: .22, xp: 24 },
+  mage:     { name: 'Skeleton Mage', h: 1.55, hits: 3, dmg: .22, xp: 22 },
+  ghost:    { name: 'Ghost', h: 1.4, hits: 3, dmg: .2, xp: 22, fly: 1 },
+  troll:    { name: 'Troll', h: 1.8, hits: 4, dmg: .25, xp: 26, idle: [0, 1] },
+  knight:   { name: 'Dark Knight', h: 1.7, hits: 4, dmg: .27, xp: 30 },
+};
+const HEROES = {
+  knight: { name: 'Starblade', img: 'hero_knight', h: 1.62, color: '#b48cff', atk: 'attack', crit: 'cast' },
+  mage:   { name: 'Rosebloom', img: 'hero_mage', h: 1.5, color: '#ff8fb0', atk: 'attack', crit: 'cast' },
+  lilac:  { name: 'Sweetlillac', img: 'hero_lilac', h: 1.5, color: '#c9b4ff', atk: 'attack', crit: 'cast', healer: true },
+  crim:   { name: 'Crimson', img: 'hero_crim', h: 1.62, color: '#ff6b6b', atk: 'attack', crit: 'cast', assassin: true },
+};
+const BOSS = { name: 'The Grammar Tyrant', type: 'knight', h: 3.4, hits: 16, dmg: .2, xp: 400 };
+
+// ---------- assets ----------
+const IMG = {};
+function loadAssets(onProgress) {
+  const names = [...Object.values(ROOMS).map(r => r.img), 'props_blue', 'props_red', 'props_castle', 'props_tower', 'hero_knight', 'hero_mage', 'hero_lilac', 'hero_crim', ...Object.keys(MONS).map(k => 'mon_' + k)];
+  let done = 0;
+  return Promise.all(names.map(n => new Promise(res => {
+    const im = new Image(); im.onload = im.onerror = () => { done++; onProgress(done / names.length); res() }; im.src = 'a/' + n + '.webp'; IMG[n] = im;
+  })));
+}
+
+// ---------- state ----------
+const S = {
+  mode: 'title', uid: null, localId: null, canWrite: true, teacher: true, net: false,
+  me: { name: '', hero: 'knight', level: 1, xp: 0, hp: 30, stats: {}, run: null, awarded: {} },
+  game: { floor: 1, seed: 'local', run: 'local' },
+  floorDoc: { hits: {}, seen: {}, chests: {} },
+  ready: null, peers: [], players: {}, ghosts: {},
+  F: null, room: 0, px: 0, py: 0, dir: 'down', moving: false, target: null, arrive: 0,
+  battle: null, fled: {}, cooldownUntil: 0, sound: LS.get('gs-sound', true), votedHide: null,
+};
+S.localId = LS.get('gs-local-id', null) || ('l' + Math.random().toString(36).slice(2, 10)); LS.set('gs-local-id', S.localId);
+Object.assign(S.me, LS.get('gs-me', {}));
+if (!S.me.items) S.me.items = { hint: 1, potion: 1 };
+const maxHP = () => 30 + 6 * (S.me.level - 1);
+const xpNeed = l => 40 + l * 25;
+const myId = () => S.uid || S.localId;
+
+// ---------- net ----------
+const NET = { db: null, room: null, user: null, floorUnsub: null, queues: {} };
+function queueWrite(path, patch) {
+  // one write at a time per doc; coalesce patches made while a write is in flight
+  const q = NET.queues[path] || (NET.queues[path] = { busy: false, pending: null });
+  q.pending = deepMerge(q.pending || {}, patch);
+  if (q.busy) return;
+  const run = async () => {
+    if (!q.pending) { q.busy = false; return }
+    q.busy = true; const p = q.pending; q.pending = null;
+    const ref = NET.db.doc(path);
+    try { await ref.update(p) }
+    catch (e) {
+      if (e && e.code === 'invalid_argument') { try { const g = await ref.get(); if (!g.exists) await ref.set(p); else S.canWrite = false } catch { } }
+    }
+    run();
+  };
+  run();
+}
+const floorPath = () => `floors/${S.game.run}-f${S.game.floor}`;
+function writeFloor(patch) {
+  deepMerge(S.floorDoc, patch);
+  if (NET.db && S.canWrite) queueWrite(floorPath(), patch); else { LS.set('gs-floor', { key: floorPath(), doc: S.floorDoc }) }
+  onFloorDoc();
+}
+function writeGame(patch) {
+  if (NET.db && S.canWrite) { deepMerge(S.game, patch); NET.db.doc('game/state').update(patch).catch(() => NET.db.doc('game/state').set({ ...S.game })) }
+  else { deepMerge(S.game, patch); LS.set('gs-game', S.game); applyGame() }
+}
+function writeReady(doc, merge) {
+  if (NET.db && S.canWrite) {
+    const ref = NET.db.doc('game/ready');
+    (merge ? ref.update(doc) : ref.set(doc)).catch(() => ref.set(merge ? { ...(S.ready || {}), ...doc } : doc).catch(() => { }));
+  } else { S.ready = merge ? deepMerge(S.ready || {}, doc) : doc; onReady() }
+}
+let saveT = 0;
+function saveMe(force) {
+  LS.set('gs-me', S.me);
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    if (NET.db && S.uid && S.canWrite && (force || S.mode !== 'title') && S.me.name) {
+      const { name, hero, level, xp, stats } = S.me; const battles = S.me.battles || 0, season = S.me.season || '';
+      NET.db.doc('players/' + S.uid).set({ name, hero, level, xp, stats, battles, season, floor: S.game.floor, seen: Date.now() }).catch(() => { });
+    }
+  }, 1500);
+}
+
+async function initNet() {
+  const c = window.claude;
+  if (!c || !c.use) { netLine(); return }
+  const [db, room, user] = await Promise.all(['db', 'room', 'user'].map(n => c.use(n).catch(() => null)));
+  NET.db = db; NET.room = room; NET.user = user;
+  if (user) {
+    try { S.uid = await user.id() } catch { }
+    try { const w = await user.can('data.write'); if (w === false) S.canWrite = false } catch { }
+    try { S.teacher = !!(await user.canEdit()) } catch { S.teacher = false }
+  }
+  if (db) {
+    S.net = true;
+    db.doc('game/state').onSnapshot(snap => {
+      if (!snap.exists) {
+        if (S.canWrite && !snap.metadata.fromCache && !S.creating) {
+          S.creating = true;
+          db.doc('game/state').get().then(g => { if (!g.exists) return db.doc('game/state').set({ floor: 1, seed: Math.random().toString(36).slice(2, 9), run: 'r' + Date.now().toString(36) }) }).catch(() => { }).finally(() => { S.creating = false });
+        }
+        return;
+      }
+      const d = snap.data(); S.game = { floor: clamp(d.floor | 0 || 1, 1, 41), seed: String(d.seed || 'x'), run: String(d.run || 'r') };
+      S.beat = +d.beat || 0; S.gameLoaded = true; S.game.season = String(d.season || '');
+      checkSeason();
+      applyGame();
+    }, () => { });
+    db.doc('game/ready').onSnapshot(snap => { S.ready = snap.exists ? snap.data() : null; onReady() }, () => { });
+    db.collection('players').onSnapshot(qs => { const m = {}; qs.docs.forEach(d => m[d.id] = d.data()); S.players = m; renderParty(); renderClass(); renderBoard() }, () => { });
+    if (S.uid) db.doc('players/' + S.uid).get().then(s => {
+      if (s.exists && !LS.get('gs-me', null)) { const d = s.data(); Object.assign(S.me, { name: d.name, hero: d.hero, level: d.level || 1, xp: d.xp || 0, stats: d.stats || {} }); syncTitle() }
+    }).catch(() => { });
+  }
+  if (room) {
+    listenBloom();
+    room.onPeers(ch => { S.peers = ch.peers; renderParty(); if (S.mode === 'title') renderBoard(); if (S.ready) onReady() }, () => { });
+  }
+  netLine();
+}
+function netLine() {
+  const el = $('#net-line');
+  if (!S.net) { el.textContent = 'Solo mode: add your Firebase settings to firebase-config.js to play together.'; return }
+  const n = uniquePlayers().length;
+  el.textContent = S.canWrite ? `Class castle connected${n ? ` · ${n} here now` : ''}` : 'You can watch, but you cannot join this castle right now.';
+}
+function uniquePlayers() {
+  const out = new Map();
+  for (const p of S.peers) { const pr = p.presence || {}; if (!pr.u || p.kind !== 'viewer') continue; const id = p.by || pr.u; if (!out.has(id)) out.set(id, { id, p, pr }) }
+  return [...out.values()];
+}
+let lastPres = '', presT = 0;
+function sendPresence(force) {
+  if (!NET.room || S.mode === 'title') return;
+  const now = performance.now(); if (!force && now - presT < 90) return;
+  const pr = { u: myId(), n: S.me.name, h: S.me.hero, run: S.game.run, f: S.game.floor, r: S.room, x: Math.round(S.px), y: Math.round(S.py), d: S.dir, m: S.moving ? 1 : 0, b: S.battle ? S.battle.mid : null, lv: S.me.level, hp: Math.round(100 * S.me.hp / maxHP()), w: S.canWrite ? 1 : 0 };
+  const key = JSON.stringify(pr); if (key === lastPres) return;
+  lastPres = key; presT = now; NET.room.presence(pr).catch(() => { });
+}
+function others() {
+  return S.peers.filter(p => !p.sameTab && p.kind === 'viewer' && p.presence && p.presence.run === S.game.run && p.presence.f === S.game.floor && p.presence.u);
+}
+
+// ---------- floor generation ----------
+const DIRS = { n: [0, -1, 's'], s: [0, 1, 'n'], w: [-1, 0, 'e'], e: [1, 0, 'w'] };
+function genFloor(n) {
+  const z = zoneOf(n), r = rng(hashStr(S.game.seed + ':' + n));
+  const [W, H] = z.grid, N = W * H;
+  const cells = []; for (let i = 0; i < N; i++) cells.push({ i, gx: i % W, gy: (i / W) | 0, ex: {} });
+  const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? null : cells[y * W + x];
+  const nbrs = c => Object.entries(DIRS).map(([d, [dx, dy]]) => ({ d, c: at(c.gx + dx, c.gy + dy) })).filter(o => o.c);
+  const link = (a, d, b) => { a.ex[d] = b.i; b.ex[DIRS[d][2]] = a.i };
+  const seen = new Set(); const start = Math.floor(r() * N); const st = [cells[start]]; seen.add(start);
+  while (st.length) { const c = st[st.length - 1]; const o = nbrs(c).filter(o => !seen.has(o.c.i)); if (!o.length) { st.pop(); continue } const k = pick(r, o); link(c, k.d, k.c); seen.add(k.c.i); st.push(k.c) }
+  for (let k = 0; k < Math.floor(N / 4); k++) { const c = pick(r, cells); const o = pick(r, nbrs(c)); if (o) link(c, o.d, o.c) }
+  // distances from an origin room; stairs go in the farthest room
+  let origin = z.boss ? cells[N - 1] : pick(r, cells);
+  const dist = new Array(N).fill(-1); dist[origin.i] = 0; const qq = [origin.i];
+  while (qq.length) { const i = qq.shift(); for (const j of Object.values(cells[i].ex)) if (dist[j] < 0) { dist[j] = dist[i] + 1; qq.push(j) } }
+  const maxD = Math.max(...dist); const far = cells.filter(c => dist[c.i] === maxD);
+  const stairsRoom = z.boss ? -1 : pick(r, far).i;
+  const bossRoom = z.boss ? 0 : -1;
+  const rooms = cells.map(c => buildRoom(c, z, rng(hashStr(S.game.seed + ':' + n + ':' + c.i)), c.i === stairsRoom, c.i === bossRoom, n));
+  const spawnList = cells.filter(c => c.i !== stairsRoom && c.i !== bossRoom).sort((a, b) => dist[a.i] - dist[b.i] || a.i - b.i).map(c => c.i);
+  return { n, z, W, H, cells, rooms, stairsRoom, bossRoom, spawnList, dist };
+}
+function propRect(zk, k) { return (META.props[zk] || {})[k] }
+function buildRoom(cell, z, r, isStairs, isBoss, n) {
+  const style = pick(r, z.rooms), RD = ROOMS[style], t = RD.tile, [x0, y0, x1, y1] = RD.floor, deco = DECOR[z.props];
+  const room = { i: cell.i, style, RD, ex: cell.ex, props: [], decals: [], wall: [], lights: [], mons: [], chest: null, stairs: null, boss: null };
+  const doorPt = d => d === 'n' ? [RD.doors.n[0], y0] : d === 's' ? [RD.doors.s[0], y1] : d === 'w' ? [x0, RD.doors.w[1]] : [x1, RD.doors.e[1]];
+  const avoid = Object.keys(cell.ex).map(d => { const [x, y] = doorPt(d); return { x, y, r: 1.9 * t } });
+  const free = (x, y, rad) => avoid.every(a => Math.hypot(a.x - x, a.y - y) > a.r + rad) && RD.blocks.every(b => !(x > b[0] - rad && x < b[2] + rad && y > b[1] - rad && y < b[3] + rad));
+  if (isStairs) {
+    const sx = lerp(x0, x1, r() < .5 ? .26 : .74), sy = y0 + t * 2.3;
+    room.stairs = { x: sx, y: sy, k: deco.stairs };
+    avoid.push({ x: sx, y: sy - t, r: 1.8 * t }, { x: sx, y: sy + t * .8, r: 1.4 * t });
+  }
+  if (isBoss) avoid.push({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, r: 3.2 * t });
+  // wall decorations along the back wall
+  const nw = deco.wall.length ? 2 + Math.floor(r() * 3) : 0;
+  for (let k = 0; k < nw; k++) {
+    const x = lerp(x0 + t * .5, x1 - t * .5, (k + .5 + (r() - .5) * .5) / nw);
+    if (cell.ex.n !== undefined && Math.abs(x - RD.doors.n[0]) < t * 1.6) continue;
+    if (room.stairs && Math.abs(x - room.stairs.x) < t * 1.5) continue;
+    const kk = pick(r, deco.wall); room.wall.push({ k: kk, x, y: y0 - t * .12 });
+    if (deco.lights[kk]) room.lights.push({ x, y: y0 - t * 1.25, r: 3.2 * t, p: r() * 9 });
+  }
+  // decal (rug) in the middle of castle and tower rooms
+  if (deco.decal.length && r() < .55 && !isBoss) room.decals.push({ k: pick(r, deco.decal), x: lerp(x0, x1, .5 + (r() - .5) * .2), y: lerp(y0, y1, .58) });
+  if (isBoss && propRect(z.props, 'rug2')) room.decals.push({ k: 'rug2', x: (x0 + x1) / 2, y: (y0 + y1) / 2 + t });
+  // furniture: along the edges, never blocking doors
+  const nf = 2 + Math.floor(r() * 4);
+  for (let k = 0, tries = 0; k < nf && tries < 40; tries++) {
+    const kk = pick(r, deco.floor); const pr = propRect(z.props, kk); if (!pr) continue;
+    const w = pr[2], h = pr[3]; const side = r();
+    let x, y;
+    if (side < .5) { x = lerp(x0 + w * .55, x1 - w * .55, r()); y = y0 + Math.min(h * .45, t * 1.1) + t * .25 }
+    else if (side < .75) { x = x0 + w * .5 + t * .1; y = lerp(y0 + t * 1.8, y1 - t * .3, r()) }
+    else { x = x1 - w * .5 - t * .1; y = lerp(y0 + t * 1.8, y1 - t * .3, r()) }
+    const fw = Math.min(w, 2.4 * t) * .42;
+    if (!free(x, y, fw)) continue;
+    if (room.props.some(p => Math.abs(p.x - x) < (p.fw + fw) + t * .2 && Math.abs(p.y - y) < t * 1.1)) continue;
+    const fh = footDepth(kk, h, t), sw = w * .44;
+    room.props.push({ k: kk, x, y, fw, solid: FLAT.has(kk) ? null : [x - sw, y - fh, x + sw, y + 2] });
+    if (deco.lights[kk]) room.lights.push({ x, y: y - h * .78, r: 3 * t, p: r() * 9 });
+    avoid.push({ x, y, r: fw + t * .3 });
+    k++;
+  }
+  const spot = rad0 => { for (const f of [1, .8, .6, .45, .3]) { const rad = rad0 * f; for (let k = 0; k < 50; k++) { const x = lerp(x0 + t, x1 - t, r()), y = lerp(y0 + t * 1.4, y1 - t * .6, r()); if (free(x, y, rad)) { avoid.push({ x, y, r: rad }); return [x, y] } } } return [lerp(x0 + t, x1 - t, r()), lerp(y0 + t * 1.4, y1 - t * .6, r())] };
+  // chest
+  if (!isStairs && !isBoss && r() < .38) {
+    const [cx, cy] = spot(t * .9); room.chest = { id: 'c' + cell.i, x: cx, y: cy, mimic: !!z.mimic && r() < .4 };
+  }
+  // monsters
+  const zp = (n - z.from) / Math.max(1, z.to - z.from);
+  if (isBoss) {
+    room.boss = { id: 'boss', type: BOSS.type, x: (x0 + x1) / 2, y: y0 + (y1 - y0) * .42, boss: true };
+    room.mons.push(room.boss);
+  } else {
+    const count = isStairs ? 1 : (r() < .25 ? 0 : 1 + Math.floor(r() * 2));
+    for (let k = 0; k < count; k++) {
+      const [mx, my] = spot(t * 1.9); room.mons.push({ id: `m${cell.i}-${k}`, type: pick(r, z.mons), x: mx, y: my, hx: mx, hy: my, ph: r() * 6.28, zp });
+    }
+    if (isStairs) {
+      const strongest = z.mons[z.mons.length - 1];
+      room.mons.push({ id: `g${cell.i}`, type: strongest, x: room.stairs.x, y: room.stairs.y + t * 1.6, hx: room.stairs.x, hy: room.stairs.y + t * 1.6, ph: 0, elite: true, guard: true, zp });
+    }
+  }
+  return room;
+}
+
+// ---------- monster helpers ----------
+function monStats(m) {
+  if (m.boss) return { name: BOSS.name, lvl: S.me.level + 5, hits: BOSS.hits, dmg: BOSS.dmg, xp: BOSS.xp, h: BOSS.h };
+  const b = MONS[m.type];
+  const lvl = S.me.level + (m.elite ? 2 : 0);
+  const hits = b.hits + Math.round((m.zp || 0) * 2) + (m.elite ? 2 : 0);
+  return { name: (m.elite ? 'Guardian ' : '') + b.name, lvl, hits, dmg: b.dmg * (m.elite ? 1.15 : 1), xp: Math.round(b.xp * (1 + .15 * (lvl - 1)) * (m.elite ? 2 : 1)), h: b.h * (m.elite ? 1.18 : 1) };
+}
+function hitsOn(id) { const h = S.floorDoc.hits && S.floorDoc.hits[id]; let s = 0; if (h) for (const k in h) s += +h[k] || 0; return s }
+function isDead(m) { return hitsOn(m.id) >= monStats(m).hits }
+function monPos(m, now) {
+  if (m.boss || m.guard) return [m.x, m.y];
+  const t = m.RD ? 0 : 0; const T = now / 1000;
+  const fr = S.fled[m.id] && S.fled[m.id] > now;
+  const tl = S.F.rooms[S.room].RD.tile;
+  const x = m.hx + (fr ? 0 : Math.sin(T * .45 + m.ph) * tl * .6), y = m.hy + (fr ? 0 : Math.cos(T * .37 + m.ph * 1.3) * tl * .3);
+  return [x, y];
+}
+
+// ---------- canvas ----------
+const cv = $('#world'), ctx = cv.getContext('2d');
+let VW = 960, VH = 640, DPR = 1, T = 54;
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1); VW = cv.clientWidth; VH = cv.clientHeight;
+  cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
+  T = clamp(Math.min(VW, VH * 1.25) / 11, 38, 60);
+  const st = $('#stage'); if (st.clientWidth) { st.width = st.clientWidth * DPR; st.height = st.clientHeight * DPR }
+}
+window.addEventListener('resize', resize);
+
+function drawRect(c, img, rect, cx, by, s, flip, alpha) {
+  const [sx, sy, sw, sh] = rect; const w = sw * s, h = sh * s;
+  if (alpha !== undefined) c.globalAlpha = alpha;
+  if (flip) { c.save(); c.translate(cx, 0); c.scale(-1, 1); c.drawImage(img, sx, sy, sw, sh, -w / 2, by - h, w, h); c.restore() }
+  else c.drawImage(img, sx, sy, sw, sh, cx - w / 2, by - h, w, h);
+  if (alpha !== undefined) c.globalAlpha = 1;
+  return [w, h];
+}
+function heroFrame(hero, anim, t) {
+  t = Math.max(0, t);
+  const hm = META.heroes[hero], list = hm.anims[anim] || hm.anims.down;
+  const fps = anim.includes('Walk') ? 7 * list.length / 4 : anim === 'attack' || anim === 'cast' ? 16 : anim === 'hurt' ? 12 : anim === 'die' ? 8 : 2.2;
+  const i = anim === 'die' ? Math.min(list.length - 1, Math.floor(t * fps)) : Math.floor(t * fps) % list.length;
+  return hm.rects[list[i]];
+}
+function drawHero(c, hero, dir, moving, cx, by, heightPx, t, anim, alpha) {
+  const hm = META.heroes[hero]; const base = hm.rects[hm.anims.down[0]];
+  // one fixed size per hero: the standing pose's feet-to-top height sets the scale
+  const s = heightPx / (base[5] * base[6]);
+  let a = anim, flip = false;
+  if (!a) {
+    if (dir === 'up') a = moving ? 'upWalk' : 'up';
+    else if (dir === 'down') a = moving ? 'downWalk' : 'down';
+    else if (dir === 'left' && hm.anims.sideWalkL) a = moving ? 'sideWalkL' : 'sideL';
+    else { a = moving ? 'sideWalk' : 'side'; flip = dir === 'left' }
+  }
+  const r = heroFrame(hero, a, t);
+  const [sx, sy, sw, sh, ax, ay, sc] = r; const k = s * sc, w = sw * k, h = sh * k;
+  // every frame is pinned by its own body centre and feet, so nothing slides between frames
+  if (alpha !== undefined) c.globalAlpha = alpha;
+  if (flip) { c.save(); c.translate(cx, 0); c.scale(-1, 1); c.drawImage(IMG[HEROES[hero].img], sx, sy, sw, sh, -ax * k, by - ay * k, w, h); c.restore() }
+  else c.drawImage(IMG[HEROES[hero].img], sx, sy, sw, sh, cx - ax * k, by - ay * k, w, h);
+  if (alpha !== undefined) c.globalAlpha = 1;
+}
+function monFrame(type, row, t, fps) {
+  t = Math.max(0, t);
+  const mm = META.mons[type]; const rows = ['idle', 'attack', 'hurt', 'die']; const ri = rows.indexOf(row);
+  let n = mm.rows[row]; let idx;
+  const custom = row === 'idle' && MONS[type].idle;
+  if (row === 'die') idx = Math.min(n - 1, Math.floor(t * fps));
+  else if (custom) idx = custom[Math.floor(t * fps) % custom.length];
+  else idx = Math.floor(t * fps) % n;
+  return [idx * mm.w, ri * mm.h, mm.w, mm.h];
+}
+function drawMon(c, m, cx, by, heightPx, t, row = 'idle', flip = false, rt = 0) {
+  const type = m.boss ? BOSS.type : m.type; const mm = META.mons[type];
+  const s = heightPx / mm.h;
+  const fps = row === 'idle' ? 3 : 8;
+  const fly = MONS[type].fly ? Math.sin(t * 3 + (m.ph || 0)) * heightPx * .08 - heightPx * .12 : 0;
+  if (m.boss) { c.save(); c.filter = 'saturate(1.4) hue-rotate(-25deg) drop-shadow(0 0 12px rgba(200,60,255,.7))' }
+  else if (m.elite) { c.save(); c.filter = 'drop-shadow(0 0 6px rgba(255,210,90,.9))' }
+  drawRect(c, IMG['mon_' + type], monFrame(type, row, row === 'idle' ? t + (m.ph || 0) : rt, fps), cx, by + fly, s, flip);
+  if (m.boss || m.elite) c.restore();
+}
+function shadow(c, x, y, w) { c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(x, y, w, w * .32, 0, 0, 6.283); c.fill() }
+
+// ---------- world rendering ----------
+const cam = { x: 0, y: 0, s: 1 };
+const fx = [];
+function render(now) {
+  const t = now / 1000;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const F = S.F; if (!F) { ctx.fillStyle = '#0b0d18'; ctx.fillRect(0, 0, VW, VH); return }
+  const z = F.z, room = F.rooms[S.room], RD = room.RD, img = IMG[RD.img], tl = RD.tile;
+  const narrow = VW < 640;
+  const sFit = Math.min(VW * .98 / img.width, (VH - (narrow ? 150 : 110)) / img.height);
+  const s = clamp(sFit, (narrow ? 33 : 46) / tl, 72 / tl); cam.s = s;
+  ctx.fillStyle = z.bg; ctx.fillRect(0, 0, VW, VH);
+  const rw = img.width * s, rh = img.height * s;
+  const top = 64, bottom = 40;
+  const viewH = VH - top - bottom;
+  cam.x = rw <= VW ? (rw - VW) / 2 : clamp(S.px * s - VW / 2, 0, rw - VW);
+  cam.y = rh <= viewH ? (rh - viewH) / 2 - top : clamp(S.py * s - VH / 2 - 20, -top, rh - VH + bottom);
+  ctx.save(); ctx.translate(-cam.x, -cam.y); ctx.scale(s, s);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0);
+  if (z.tint) { ctx.fillStyle = z.tint; ctx.globalCompositeOperation = 'multiply'; ctx.fillRect(0, 0, img.width, img.height); ctx.globalCompositeOperation = 'source-over' }
+  const PI = IMG['props_' + z.props], P = META.props[z.props];
+  const prop = (k, x, y, sc = 1, flip = false, alpha) => { const r = P[k]; if (r) drawRect(ctx, PI, r, x, y, sc, flip, alpha) };
+  for (const d of room.decals) { const r = P[d.k]; if (r) drawRect(ctx, PI, r, d.x, d.y + r[3] / 2, Math.min(1, (RD.floor[2] - RD.floor[0]) * .55 / r[2])) }
+  // doors
+  const deco = DECOR[z.props];
+  for (const [d, to] of Object.entries(room.ex)) {
+    const seen = !!S.floorDoc.seen[to];
+    if (d === 'n') { const r = P.door; const sc = Math.min(1, tl * 2.4 / r[3]); prop('door', RD.doors.n[0], RD.doors.n[1] + 2, sc) }
+    else if (d === 'w' || d === 'e') {
+      const r = P.sdoorA; const sc = Math.min(1.05, tl * 3.1 / r[3]); const [dx, dy] = RD.doors[d];
+      prop('sdoorA', dx, dy + tl * 1.0, sc, d === 'w');
+    } else {
+      const [dx, dy] = RD.doors.s;
+      if (!RD.sGap) { const g = ctx.createLinearGradient(0, dy, 0, dy + tl * 1.6); g.addColorStop(0, 'rgba(0,0,0,.85)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(dx - tl * .85, dy, tl * 1.7, tl * 1.6) }
+    }
+    // exit chevrons
+    const [ax, ay] = d === 'n' ? [RD.doors.n[0], RD.floor[1] + tl * .35] : d === 's' ? [RD.doors.s[0], RD.floor[3] - tl * .1] : d === 'w' ? [RD.floor[0] + tl * .25, RD.doors.w[1] + tl * .3] : [RD.floor[2] - tl * .25, RD.doors.e[1] + tl * .3];
+    const pulse = .55 + .45 * Math.sin(t * 3 + to);
+    ctx.save(); ctx.translate(ax, ay); ctx.rotate({ n: 0, e: Math.PI / 2, s: Math.PI, w: -Math.PI / 2 }[d]);
+    ctx.fillStyle = seen ? `rgba(239,230,207,${.25 + .2 * pulse})` : `rgba(242,195,91,${.45 + .4 * pulse})`;
+    ctx.beginPath(); ctx.moveTo(0, -tl * .32); ctx.lineTo(tl * .3, 0); ctx.lineTo(tl * .14, 0); ctx.lineTo(0, -tl * .15); ctx.lineTo(-tl * .14, 0); ctx.lineTo(-tl * .3, 0); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  for (const w of room.wall) prop(w.k, w.x, w.y);
+  // y-sorted drawables
+  const list = [], tags = [];
+  for (const p of room.props) list.push({ y: FLAT.has(p.k) ? -1e9 : p.y, f: () => prop(p.k, p.x, p.y) });
+  if (room.stairs) {
+    const st = room.stairs, r = P[st.k], sc = tl * deco.stairsH / r[3];
+    const guard = room.mons.find(m => m.guard); const open = !guard || isDead(guard);
+    list.push({ y: st.y, f: () => {
+      prop(st.k, st.x, st.y, sc);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createRadialGradient(st.x, st.y - r[3] * sc * .5, 4, st.x, st.y - r[3] * sc * .5, tl * 2.4);
+      const col = open ? '255,215,120' : '120,170,255';
+      g.addColorStop(0, `rgba(${col},${.28 + .12 * Math.sin(t * 2.4)})`); g.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = g; ctx.fillRect(st.x - tl * 2.5, st.y - r[3] * sc - tl, tl * 5, r[3] * sc + tl * 2); ctx.restore();
+      if (!open) { ctx.strokeStyle = `rgba(150,200,255,${.5 + .3 * Math.sin(t * 4)})`; ctx.lineWidth = 2 / s * 1.5; ctx.strokeRect(st.x - r[2] * sc / 2, st.y - r[3] * sc, r[2] * sc, r[3] * sc) }
+      for (let k = 0; k < 4; k++) { const a = t * 1.3 + k * 1.57; ctx.fillStyle = `rgba(255,240,190,${.5 + .5 * Math.sin(a * 2)})`; ctx.fillRect(st.x + Math.cos(a) * tl * .7, st.y - tl * 1.2 + Math.sin(a * 1.7) * tl * .6, 2.5 / s, 2.5 / s) }
+    } });
+  }
+  if (room.chest && !S.floorDoc.chests[room.chest.id]) {
+    const c = room.chest; list.push({ y: c.y, f: () => { shadow(ctx, c.x, c.y, tl * .45); prop(deco.chest, c.x, c.y + Math.sin(t * 2) * .6, Math.min(1, tl * 1.2 / P[deco.chest][3])) } });
+  }
+  for (const m of room.mons) {
+    if (isDead(m)) continue;
+    const [mx, my] = monPos(m, now); const st = monStats(m);
+    const fighting = others().some(p => p.presence.b === m.id) || (S.battle && S.battle.mid === m.id);
+    list.push({ y: my, f: () => {
+      shadow(ctx, mx, my, tl * st.h * .3);
+      drawMon(ctx, m, mx, my, tl * st.h, t, 'idle', Math.sin(now / 1000 * .45 + (m.ph || 0) + 1.57) > 0 && !m.boss);
+      const left = st.hits - hitsOn(m.id);
+      const head = my - tl * st.h + (MONS[m.boss ? BOSS.type : m.type].fly ? -tl * st.h * .12 : 0);
+      tags.push({ x: mx, y: head - tl * .3, col: m.boss ? '#e7a6ff' : m.elite ? '#ffd77d' : '#ffb0a8', label: `${st.name} · Lv ${st.lvl}` });
+      if (left < st.hits) { const w = tl * 1.1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(mx - w / 2, head - tl * .2, w, tl * .1); ctx.fillStyle = '#ff6b6b'; ctx.fillRect(mx - w / 2, head - tl * .2, w * left / st.hits, tl * .1) }
+      if (fighting) { ctx.font = `${Math.round(tl * .45)}px Silkscreen, monospace`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd77d'; ctx.fillText('!', mx, head - tl * .72) }
+    } });
+  }
+  // other players in this room
+  for (const p of others()) {
+    const pr = p.presence; if (pr.r !== S.room || !HEROES[pr.h]) continue;
+    const g = S.ghosts[p.peer] || (S.ghosts[p.peer] = { x: pr.x, y: pr.y });
+    g.x = lerp(g.x, pr.x, .25); g.y = lerp(g.y, pr.y, .25);
+    list.push({ y: g.y, f: () => { shadow(ctx, g.x, g.y, tl * .36); drawHero(ctx, pr.h, pr.d, !!pr.m, g.x, g.y, tl * HEROES[pr.h].h, t + (p.peer.charCodeAt(0) || 0), null, pr.b ? .7 : 1); nameTag(String(pr.n || 'Hero'), pr.lv, g.x, g.y - tl * HEROES[pr.h].h - tl * .12, tl, HEROES[pr.h].color, !!pr.b) } });
+  }
+  // me
+  list.push({ y: S.py, f: () => { shadow(ctx, S.px, S.py, tl * .38); drawHero(ctx, S.me.hero, S.dir, S.moving, S.px, S.py, tl * HEROES[S.me.hero].h, t); nameTag(S.me.name, S.me.level, S.px, S.py - tl * HEROES[S.me.hero].h - tl * .12, tl, '#f2c35b') } });
+  list.sort((a, b) => a.y - b.y); for (const d of list) d.f();
+  // monster tags on top, nudged apart so they never stack
+  const placed = [], fsz = Math.max(9, tl * .26);
+  ctx.font = `600 ${fsz}px "Pixelify Sans", sans-serif`;
+  for (const g of tags.sort((a, b) => b.y - a.y)) {
+    const w = ctx.measureText(g.label).width + fsz; let y = g.y;
+    for (let k = 0; k < 6; k++) { const hit = placed.find(p => Math.abs(p.x - g.x) < (p.w + w) / 2 && Math.abs(p.y - y) < fsz * 1.5); if (!hit) break; y = hit.y - fsz * 1.55 }
+    placed.push({ x: g.x, y, w }); nameTag('', 0, g.x, y, tl, g.col, false, g.label);
+  }
+  // click marker
+  if (S.target && S.target.mark) { ctx.strokeStyle = 'rgba(242,195,91,.8)'; ctx.lineWidth = 2 / s; ctx.beginPath(); ctx.ellipse(S.target.x, S.target.y, tl * .3 * (1 + .15 * Math.sin(t * 8)), tl * .12, 0, 0, 6.283); ctx.stroke() }
+  // lights
+  ctx.globalCompositeOperation = 'lighter';
+  for (const L of room.lights) {
+    const fl = .85 + .1 * Math.sin(t * 9 + L.p) + .05 * Math.sin(t * 23 + L.p);
+    const g = ctx.createRadialGradient(L.x, L.y, 0, L.x, L.y, L.r * fl); g.addColorStop(0, `rgba(${z.light},.32)`); g.addColorStop(.4, `rgba(${z.light},.10)`); g.addColorStop(1, `rgba(${z.light},0)`);
+    ctx.fillStyle = g; ctx.fillRect(L.x - L.r, L.y - L.r, L.r * 2, L.r * 2);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  // floating effects
+  for (let i = fx.length - 1; i >= 0; i--) { const e = fx[i]; e.t += 1 / 60; if (e.t > e.d) { fx.splice(i, 1); continue } ctx.globalAlpha = 1 - e.t / e.d; ctx.font = `bold ${Math.round(tl * .42)}px "Pixelify Sans", sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillText(e.txt, e.x + 1, e.y - e.t * tl + 1); ctx.fillStyle = e.c; ctx.fillText(e.txt, e.x, e.y - e.t * tl); ctx.globalAlpha = 1 }
+  ctx.restore();
+  // vignette and ambience
+  const vg = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * .35, VW / 2, VH / 2, Math.max(VW, VH) * .75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(0,0,0,${.45 + z.dark})`);
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
+  if (z.dark) { ctx.fillStyle = `rgba(0,0,10,${z.dark * .35})`; ctx.fillRect(0, 0, VW, VH) }
+}
+function nameTag(name, lv, x, y, tl, col, busy, full) {
+  const fs = Math.max(9, tl * .26); ctx.font = `600 ${fs}px "Pixelify Sans", sans-serif`; ctx.textAlign = 'center';
+  const label = full || `${name} · ${lv || 1}`; const w = ctx.measureText(label).width + fs;
+  ctx.fillStyle = 'rgba(8,9,16,.4)'; ctx.fillRect(x - w / 2, y - fs * 1.15, w, fs * 1.4);
+  ctx.fillStyle = col; ctx.fillText(busy ? '⚔ ' + label : label, x, y);
+}
+
+// ---------- movement ----------
+const keys = {};
+window.addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase(); keys[k] = true;
+  if (S.mode === 'battle') battleKey(e);
+  else if (k === 'escape') closePanels();
+  if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k) && S.mode === 'play') e.preventDefault();
+});
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false });
+window.addEventListener('blur', () => { for (const k in keys) keys[k] = false });
+cv.addEventListener('pointerdown', e => {
+  if (S.mode !== 'play' || !S.F) return;
+  const rc = cv.getBoundingClientRect();
+  const x = (e.clientX - rc.left + cam.x) / cam.s, y = (e.clientY - rc.top + cam.y) / cam.s;
+  const room = S.F.rooms[S.room], RD = room.RD, tl = RD.tile;
+  // tap near an exit chevron = walk through
+  for (const d of Object.keys(room.ex)) {
+    const [ax, ay] = exitPoint(RD, d);
+    if (Math.hypot(ax - x, ay - y) < tl * 1.2) { S.target = { x: ax, y: ay, door: d, mark: true }; return }
+  }
+  S.target = { x: clamp(x, RD.floor[0], RD.floor[2]), y: clamp(y + tl * .2, RD.floor[1], RD.floor[3]), mark: true };
+});
+function exitPoint(RD, d) { const [x0, y0, x1, y1] = RD.floor; return d === 'n' ? [RD.doors.n[0], y0] : d === 's' ? [RD.doors.s[0], y1] : d === 'w' ? [x0, RD.doors.w[1] + RD.tile * .3] : [x1, RD.doors.e[1] + RD.tile * .3] }
+function blocked(room, x, y) {
+  const RD = room.RD, [x0, y0, x1, y1] = RD.floor, m = RD.tile * .2;
+  if (x < x0 + m || x > x1 - m || y < y0 + m * .6 || y > y1 - m * .3) return true;
+  for (const b of RD.blocks) if (x > b[0] && x < b[2] && y > b[1] && y < b[3]) return true;
+  const fr = RD.tile * .22;
+  for (const p of room.props) { const s = p.solid; if (s && x > s[0] - fr && x < s[2] + fr && y > s[1] - fr * .5 && y < s[3] + fr * .6) return true }
+  if (room.stairs) { const st = room.stairs, tl = RD.tile; if (Math.abs(x - st.x) < tl * .8 && y < st.y - tl * .15 && y > st.y - tl * 2.6) return true }
+  return false;
+}
+function update(dt, now) {
+  if (S.mode !== 'play' || !S.F) { S.moving = false; return }
+  const room = S.F.rooms[S.room], RD = room.RD, tl = RD.tile;
+  let vx = 0, vy = 0;
+  if (keys.a || keys.arrowleft) vx -= 1; if (keys.d || keys.arrowright) vx += 1;
+  if (keys.w || keys.arrowup) vy -= 1; if (keys.s || keys.arrowdown) vy += 1;
+  if (vx || vy) S.target = null;
+  else if (S.target) { const dx = S.target.x - S.px, dy = S.target.y - S.py, d = Math.hypot(dx, dy); if (d < tl * .12) { if (!S.target.door) S.target = null } else { vx = dx / d; vy = dy / d } }
+  const len = Math.hypot(vx, vy); S.moving = len > 0;
+  if (len) {
+    vx /= len; vy /= len;
+    if (Math.abs(vx) > Math.abs(vy) * 1.1) S.dir = vx < 0 ? 'left' : 'right'; else S.dir = vy < 0 ? 'up' : 'down';
+    const sp = tl * 3.4 * dt;
+    const nx = S.px + vx * sp, ny = S.py + vy * sp;
+    if (!blocked(room, nx, S.py)) S.px = nx; else if (S.target && !S.target.door) S.target = null;
+    if (!blocked(room, S.px, ny)) S.py = ny;
+  }
+  // regen out of battle
+  S.regen = (S.regen || 0) + dt; if (S.regen > 1.6) { S.regen = 0; if (S.me.hp < maxHP()) { S.me.hp++; hud() } }
+  if (now < S.arrive) return;
+  // exits
+  const [x0, y0, x1, y1] = RD.floor;
+  for (const [d, to] of Object.entries(room.ex)) {
+    const [ex, ey] = exitPoint(RD, d); let hit = false;
+    if (d === 'n') hit = S.py < y0 + tl * .4 && Math.abs(S.px - ex) < tl * .8;
+    if (d === 's') hit = S.py > y1 - tl * .4 && Math.abs(S.px - ex) < tl * .8;
+    if (d === 'w') hit = S.px < x0 + tl * .4 && Math.abs(S.py - ey) < tl * .9;
+    if (d === 'e') hit = S.px > x1 - tl * .4 && Math.abs(S.py - ey) < tl * .9;
+    if (hit) { goRoom(to, DIRS[d][2]); return }
+  }
+  // monsters
+  for (const m of room.mons) {
+    if (isDead(m)) continue; const [mx, my] = monPos(m, now);
+    if (S.fled[m.id] && S.fled[m.id] > now) continue;
+    if (Math.hypot(mx - S.px, (my - S.py) * 1.4) < tl * .75) { startBattle(m); return }
+  }
+  // chest
+  const c = room.chest;
+  if (c && !S.floorDoc.chests[c.id] && Math.hypot(c.x - S.px, (c.y - S.py) * 1.4) < tl * .75) openChest(room, c);
+  // stairs
+  const st = room.stairs;
+  if (st && Math.hypot(st.x - S.px, st.y - S.py) < tl * .9 && now > (S.stairsCD || 0)) {
+    S.stairsCD = now + 2500;
+    const guard = room.mons.find(m => m.guard);
+    if (guard && !isDead(guard)) toast('A guardian protects these stairs. Defeat it first!');
+    else foundStairs();
+  }
+}
+function goRoom(to, enterFrom) {
+  const fade = $('#fade'); fade.style.opacity = 1; S.mode = 'trans'; sfx('door');
+  setTimeout(() => {
+    S.room = to; const RD = S.F.rooms[to].RD, tl = RD.tile; let [x, y] = exitPoint(RD, enterFrom);
+    const inset = tl * 1.1; if (enterFrom === 'n') y += inset; if (enterFrom === 's') y -= inset; if (enterFrom === 'w') x += inset; if (enterFrom === 'e') x -= inset;
+    S.px = x; S.py = y; S.target = null; S.arrive = performance.now() + 500;
+    if (!S.floorDoc.seen[to]) { writeFloor({ seen: { [to]: 1 } }); }
+    S.mode = 'play'; fade.style.opacity = 0; sendPresence(true); drawMinimap();
+  }, 220);
+}
+function spawnPoint() {
+  const F = S.F; const list = F.spawnList; const idx = hashStr(myId() + ':' + F.n) % list.length; const ri = list[idx];
+  const RD = F.rooms[ri].RD, [x0, y0, x1, y1] = RD.floor; let x = (x0 + x1) / 2, y = (y0 + y1) / 2 + RD.tile;
+  const room = F.rooms[ri];
+  for (let k = 0; k < 30 && (blocked(room, x, y) || room.mons.some(m => Math.hypot(m.hx - x, m.hy - y) < RD.tile * 2)); k++) { x = lerp(x0 + RD.tile, x1 - RD.tile, Math.random()); y = lerp(y0 + RD.tile * 2, y1 - RD.tile, Math.random()) }
+  return [ri, x, y];
+}
+
+// ---------- floors ----------
+let loadedKey = '';
+function applyGame() {
+  const key = S.game.run + '|' + S.game.floor + '|' + S.game.seed;
+  if (key === loadedKey) return;
+  const prevFloor = S.F ? S.F.n : null;
+  loadedKey = key;
+  S.F = genFloor(S.game.floor);
+  S.floorDoc = { hits: {}, seen: {}, chests: {} };
+  if (S.me.run !== S.game.run + '-' + S.game.floor) { S.me.run = S.game.run + '-' + S.game.floor; S.me.awarded = {} }
+  // floor doc
+  if (NET.floorUnsub) { NET.floorUnsub(); NET.floorUnsub = null }
+  if (NET.db) {
+    NET.floorUnsub = NET.db.doc(floorPath()).onSnapshot(snap => {
+      const d = snap.exists ? snap.data() : {};
+      S.floorDoc = { hits: JSON.parse(JSON.stringify(d.hits || {})), seen: { ...(d.seen || {}) }, chests: { ...(d.chests || {}) } };
+      onFloorDoc();
+    }, () => { });
+  } else { const lf = LS.get('gs-floor', null); if (lf && lf.key === floorPath()) S.floorDoc = lf.doc }
+  const [ri, x, y] = spawnPoint(); S.room = ri; S.px = x; S.py = y; S.target = null; S.arrive = performance.now() + 600;
+  S.fled = {}; clearTimeout(S.climbT); S.climbKey = null;
+  if (S.battle) endBattle(true);
+  closeReady();
+  if (S.mode !== 'title') { showBanner(); writeFloor({ seen: { [ri]: 1 } }); sendPresence(true); if (prevFloor && S.game.floor > prevFloor) sfx('level') }
+  hud(); drawMinimap(); saveMe(); onReady();
+}
+function onFloorDoc() {
+  drawMinimap();
+  const b = S.battle;
+  if (b && b.phase !== 'won' && b.phase !== 'lost' && isDead(b.m)) winBattle();
+  if (S.F && S.F.bossRoom >= 0) { const boss = S.F.rooms[S.F.bossRoom].boss; if (boss && isDead(boss) && !S.victoryShown) { S.victoryShown = true; setTimeout(victory, b ? 2200 : 300) } }
+}
+function showBanner() {
+  const z = S.F.z; $('#banner-a').textContent = z.boss ? 'FLOOR 41' : 'FLOOR ' + S.F.n; $('#banner-b').textContent = z.name;
+  const b = $('#banner'); b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+}
+
+// ---------- chests ----------
+function openChest(room, c) {
+  if (c.mimic) { startBattle({ id: c.id, type: 'mimic', x: c.x, y: c.y, hx: c.x, hy: c.y, ph: 0, chest: true, zp: 0 }); return }
+  writeFloor({ chests: { [c.id]: myId() } });
+  const got = giveLoot();
+  sfx('chest'); fx.push({ x: c.x, y: c.y - room.RD.tile, txt: `+1 hint  +${got} potion${got > 1 ? 's' : ''}`, c: '#7be0a0', t: 0, d: 1.8 });
+  hud();
+}
+function giveLoot() {
+  const pots = Math.random() < .4 ? 2 : 1;
+  S.me.items.hint++; S.me.items.potion += pots; saveMe();
+  toast(`Treasure! A hint scroll and ${pots === 2 ? 'two healing potions' : 'a healing potion'}.`);
+  return pots;
+}
+function useHint() {
+  const b = S.battle; if (!b || b.phase !== 'ask' || b.hinted || S.me.items.hint < 1) return;
+  b.hinted = true; S.me.items.hint--; saveMe(); sfx('chest');
+  const wrong = shuffle(b.q.opts.map((o, i) => i).filter(i => b.q.opts[i] !== b.q.answer)).slice(0, 2);
+  for (const i of wrong) { const el = $('#opt-' + i); el.classList.add('gone'); el.disabled = true }
+  const left = [...document.querySelectorAll('.opt:not(.gone)')][0]; if (left && matchMedia('(pointer:fine)').matches) left.focus({ preventScroll: true });
+  hud();
+}
+function usePotion() {
+  const b = S.battle; if (b && b.phase !== 'ask' && b.phase !== 'feedback') return;
+  if (S.me.items.potion < 1 || S.me.hp >= maxHP()) return;
+  const heal = Math.min(maxHP() - S.me.hp, Math.ceil(maxHP() * .5));
+  S.me.items.potion--; S.me.hp += heal; saveMe(); sfx('level');
+  if (b) b.pops.push({ txt: `+${heal} HP`, c: '#7be0a0', side: 0, t0: performance.now() });
+  else { const tl = S.F.rooms[S.room].RD.tile; fx.push({ x: S.px, y: S.py - tl * 1.8, txt: `+${heal} HP`, c: '#7be0a0', t: 0, d: 1.4 }) }
+  hud();
+}
+
+// ---------- XP ----------
+function gainXP(n) {
+  S.me.xp += n; let up = false;
+  while (S.me.xp >= xpNeed(S.me.level)) { S.me.xp -= xpNeed(S.me.level); S.me.level++; up = true }
+  if (up) { S.me.hp = maxHP(); toast(`Level up! You are now level ${S.me.level}.`); sfx('level') }
+  hud(); saveMe(); sendPresence(true);
+}
+function recordAnswer(topic, ok) {
+  const st = S.me.stats[topic] || (S.me.stats[topic] = { c: 0, w: 0 }); ok ? st.c++ : st.w++; saveMe();
+}
+
+// ---------- questions ----------
+const bags = {};
+function nextQuestion(tier) {
+  if (!bags[tier] || !bags[tier].length) bags[tier] = shuffle(QBANK[tier].map((q, i) => i));
+  const q = QBANK[tier][bags[tier].pop()];
+  const opts = shuffle([q[2], q[3], q[4], q[5]]);
+  return { topic: q[0], text: q[1], answer: q[2], opts, expl: q[6], tier };
+}
+function pickTier(m) {
+  const z = S.F.z; if (m.boss) return Math.random() < .6 ? 3 : 2;
+  if (!m.elite && z.tier > 0 && Math.random() < .25) return z.tier - 1;
+  return z.tier;
+}
+
+// ---------- battle ----------
+const stage = $('#stage'), sctx = stage.getContext('2d');
+function startBattle(m) {
+  S.mode = 'battle'; S.moving = false; S.target = null; keys.w = keys.a = keys.s = keys.d = false;
+  const st = monStats(m);
+  S.me.battles = (S.me.battles || 0) + 1; saveMe();
+  S.battle = { m, mid: m.id, st, phase: 'ask', q: null, streak: 0, t0: performance.now(), heroAnim: null, monAnim: null, hits: 0, pops: [], flash: 0, shake: 0 };
+  $('#battle').hidden = false; resize();
+  $('#b-mon-name').textContent = st.name; $('#b-mon-lv').textContent = 'LV ' + st.lvl;
+  $('#b-me-name').textContent = S.me.name; $('#b-me-lv').textContent = 'LV ' + S.me.level;
+  sfx('encounter'); sendPresence(true); askQuestion(); battleHud();
+}
+function askQuestion() {
+  const b = S.battle; b.phase = 'ask'; b.q = nextQuestion(pickTier(b.m));
+  $('#b-topic').textContent = b.q.topic; $('#b-fb').hidden = true;
+  $('#b-q').innerHTML = esc(b.q.text).replace('___', '<span class="slot" id="slot">?</span>');
+  const box = $('#b-opts'); box.innerHTML = '';
+  b.q.opts.forEach((o, i) => { const bt = document.createElement('button'); bt.className = 'opt'; bt.id = 'opt-' + i; bt.innerHTML = `<kbd>${i + 1}</kbd><span>${esc(o === '—' ? '(no word)' : o)}</span>`; bt.onclick = () => answer(i); box.appendChild(bt) });
+  $('#b-flee').disabled = false; b.hinted = false; hud();
+  $('#b-hint').textContent = b.m.boss ? 'The whole class can strike the Tyrant together.' : 'Pick the word that completes the sentence.';
+  const first = $('#opt-0'); if (first && matchMedia('(pointer:fine)').matches) first.focus({ preventScroll: true });
+}
+function answer(i) {
+  const b = S.battle; if (!b || b.phase !== 'ask') return;
+  const choice = b.q.opts[i], ok = choice === b.q.answer;
+  document.querySelectorAll('.opt').forEach((el, k) => { el.disabled = true; if (b.q.opts[k] === b.q.answer) el.classList.add('ok'); else if (k === i) el.classList.add('no') });
+  const slot = $('#slot'); slot.textContent = b.q.answer === '—' ? '∅' : b.q.answer; slot.classList.add('ok');
+  recordAnswer(b.q.topic, ok); $('#b-flee').disabled = true;
+  const now = performance.now();
+  if (ok) {
+    b.streak++; const crit = b.streak >= 3 && b.streak % 3 === 0; const dmg = crit ? (HEROES[S.me.hero].assassin ? 3 : 2) : 1;
+    b.phase = 'anim'; b.heroAnim = { a: crit ? HEROES[S.me.hero].crit : HEROES[S.me.hero].atk, t0: now }; sfx(crit ? 'crit' : 'hit');
+    setTimeout(() => {
+      if (!S.battle || S.battle !== b) return;
+      b.monAnim = { a: 'hurt', t0: performance.now() }; b.flash = 1;
+      b.pops.push({ txt: crit ? `CRITICAL! -${dmg}` : `-${dmg}`, c: crit ? '#ffd77d' : '#fff', side: 1, t0: performance.now() });
+      if (crit && HEROES[S.me.hero].healer) floralBloom(b);
+      const mine = (S.floorDoc.hits[b.mid] && +S.floorDoc.hits[b.mid][myId()]) || 0;
+      const left = b.st.hits - hitsOn(b.mid);
+      const add = Math.min(dmg, Math.max(0, left));
+      b.hits += add;
+      writeFloor({ hits: { [b.mid]: { [myId()]: mine + add } } });
+      battleHud();
+      setTimeout(() => { if (S.battle === b && b.phase === 'anim') askQuestion() }, 700);
+    }, 420);
+  } else {
+    b.streak = 0; b.phase = 'anim';
+    b.monAnim = { a: 'attack', t0: now }; sfx('miss');
+    const dmg = Math.max(2, Math.round(maxHP() * b.st.dmg));
+    setTimeout(() => {
+      if (!S.battle || S.battle !== b) return;
+      S.me.hp = Math.max(0, S.me.hp - dmg); b.heroAnim = { a: 'hurt', t0: performance.now() }; b.shake = 1;
+      b.pops.push({ txt: `-${dmg} HP`, c: '#ff6b6b', side: 0, t0: performance.now() });
+      battleHud(); hud();
+      const ans = b.q.answer === '—' ? 'no word (leave it empty)' : `“${esc(b.q.answer)}”`;
+      $('#b-fb-text').innerHTML = `The answer is <b>${ans}</b>. ${esc(b.q.expl)}`;
+      $('#b-fb').hidden = false; b.phase = 'feedback';
+      if (S.me.hp <= 0) { b.phase = 'feedback-lost'; b.heroAnim = { a: 'die', t0: performance.now() }; $('#b-continue').innerHTML = 'Continue <kbd>Enter</kbd>' }
+      $('#b-continue').focus({ preventScroll: true });
+    }, 450);
+  }
+  sendPresence(true);
+}
+function continueBattle() {
+  const b = S.battle; if (!b) return;
+  if (b.phase === 'feedback') askQuestion();
+  else if (b.phase === 'feedback-lost') loseBattle();
+  else if (b.phase === 'won' || b.phase === 'lost') endBattle();
+}
+function winBattle() {
+  const b = S.battle; b.phase = 'won'; b.monAnim = { a: 'die', t0: performance.now() }; sfx('win');
+  let msg;
+  const mineHits = (S.floorDoc.hits[b.mid] && +S.floorDoc.hits[b.mid][myId()]) || 0;
+  if (mineHits > 0 && !S.me.awarded[b.mid]) { S.me.awarded[b.mid] = 1; gainXP(b.st.xp); msg = `Victory! You earned <b>${b.st.xp} XP</b>.` }
+  else msg = 'Your classmates finished it off. Victory for the team!';
+  if (b.m.chest) { writeFloor({ chests: { [b.m.id]: myId() } }); giveLoot() }
+  if (b.m.guard) msg += ' The stairs are open now.';
+  document.querySelectorAll('.opt').forEach(el => el.disabled = true);
+  $('#b-fb-text').innerHTML = msg; $('#b-fb').hidden = false; $('#b-flee').disabled = true;
+  $('#b-continue').innerHTML = 'Back to the castle <kbd>Enter</kbd>';
+  battleHud(); $('#b-continue').focus({ preventScroll: true });
+}
+function loseBattle() {
+  const b = S.battle; b.phase = 'lost';
+  $('#b-fb-text').innerHTML = 'You fainted! You wake up in your starting room with full health. The monster still has its wounds, so come back stronger.';
+  $('#b-continue').innerHTML = 'Wake up <kbd>Enter</kbd>';
+}
+function endBattle(silent) {
+  const b = S.battle; if (!b) return;
+  $('#battle').hidden = true; $('#b-continue').innerHTML = 'Continue <kbd>Enter</kbd>';
+  S.battle = null; S.mode = S.mode === 'title' ? 'title' : 'play';
+  if (!silent) {
+    if (b.phase === 'lost') { S.me.hp = maxHP(); const [ri, x, y] = spawnPoint(); S.room = ri; S.px = x; S.py = y; S.fled[b.mid] = performance.now() + 4000 }
+    else if (b.phase !== 'won') { S.fled[b.mid] = performance.now() + 4000; const tl = S.F.rooms[S.room].RD.tile; nudgeAway(b.m, tl) }
+  }
+  hud(); sendPresence(true); drawMinimap();
+}
+function nudgeAway(m, tl) {
+  const room = S.F.rooms[S.room]; const [mx, my] = monPos(m, performance.now());
+  let dx = S.px - mx, dy = S.py - my; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+  for (let k = 1; k < 5; k++) { const x = S.px + dx * tl * .5 * k, y = S.py + dy * tl * .5 * k; if (!blocked(room, x, y)) { S.px = x; S.py = y } }
+}
+function flee() { const b = S.battle; if (!b || b.phase !== 'ask') return; toast('You ran away. The monster keeps its wounds.'); endBattle() }
+function battleKey(e) {
+  const b = S.battle; if (!b) return;
+  if (e.key.toLowerCase() === 'h') { e.preventDefault(); useHint(); return }
+  if (e.key.toLowerCase() === 'p') { e.preventDefault(); usePotion(); return }
+  if (b.phase === 'ask' && /^[1-4]$/.test(e.key)) { e.preventDefault(); const el = $('#opt-' + (+e.key - 1)); if (el && !el.disabled) answer(+e.key - 1) }
+  else if ((e.key === 'Enter' || e.key === ' ') && !$('#b-fb').hidden && document.activeElement !== $('#b-continue')) { e.preventDefault(); continueBattle() }
+}
+function battleHud() {
+  const b = S.battle; if (!b) return;
+  const left = Math.max(0, b.st.hits - hitsOn(b.mid));
+  $('#b-mon-hp').style.width = (100 * left / b.st.hits) + '%'; $('#b-mon-hp-t').textContent = `${left} / ${b.st.hits}`;
+  $('#b-me-hp').style.width = (100 * S.me.hp / maxHP()) + '%'; $('#b-me-hp-t').textContent = `${S.me.hp} / ${maxHP()}`;
+  $('#b-streak').textContent = b.streak >= 2 ? `STREAK ×${b.streak}` : '';
+  const allies = others().filter(p => p.presence.b === b.mid).map(p => String(p.presence.n || 'Hero'));
+  $('#b-allies').textContent = allies.length ? 'Fighting with you: ' + [...new Set(allies)].join(', ') : '';
+}
+function renderStage(now) {
+  const b = S.battle; if (!b) return;
+  const cw = Math.round(stage.clientWidth * DPR), ch = Math.round(stage.clientHeight * DPR);
+  if (!cw || !ch) return;
+  if (stage.width !== cw || stage.height !== ch) { stage.width = cw; stage.height = ch }
+  const W = cw / DPR, H = ch / DPR;
+  sctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const z = S.F.z; const t = now / 1000;
+  // backdrop: the current room's floor, darkened
+  const RD = S.F.rooms[S.room].RD, img = IMG[RD.img];
+  const [x0, y0, x1, y1] = RD.floor; const sw = x1 - x0, sh = (y1 - y0) * .6;
+  const sc = Math.max(W / sw, H / ((y1 - y0) * .8));
+  sctx.save();
+  if (b.shake > 0) { sctx.translate((Math.random() - .5) * 10 * b.shake, (Math.random() - .5) * 6 * b.shake); b.shake = Math.max(0, b.shake - .06) }
+  sctx.drawImage(img, x0 + (sw - W / sc) / 2, y0 + (y1 - y0) * .2, W / sc, H / sc, 0, 0, W, H);
+  sctx.fillStyle = 'rgba(5,6,14,.45)'; sctx.fillRect(0, 0, W, H);
+  const g = sctx.createRadialGradient(W / 2, H * .8, 10, W / 2, H * .8, W * .7); g.addColorStop(0, `rgba(${z.light},.18)`); g.addColorStop(1, 'rgba(0,0,0,.55)'); sctx.fillStyle = g; sctx.fillRect(0, 0, W, H);
+  const ground = H * .9; const unit = Math.min(H / 2.6, W / 6.5);
+  // allies behind the hero
+  const allies = others().filter(p => p.presence.b === b.mid && HEROES[p.presence.h]).slice(0, 3);
+  allies.forEach((p, k) => { const ax = W * .12 + k * unit * .55, ay = ground - unit * .25; shadow(sctx, ax, ay, unit * .3); drawHero(sctx, p.presence.h, 'right', false, ax, ay, unit * HEROES[p.presence.h].h * .8, t + k, null, .85) });
+  // hero
+  const hx = W * .28, hy = ground; shadow(sctx, hx, hy, unit * .45);
+  let ha = null, ht = t;
+  if (b.heroAnim) { const el = (now - b.heroAnim.t0) / 1000; const lim = { attack: .75, cast: .55, hurt: .45, die: 99 }[b.heroAnim.a] || .6; if (el < lim) { ha = b.heroAnim.a; ht = el } else if (b.heroAnim.a === 'die') { ha = 'die'; ht = el } else b.heroAnim = null }
+  const lunge = ha === 'attack' || ha === 'cast' ? Math.sin(Math.min(1, ht / .5) * Math.PI) * unit * .5 : 0;
+  drawHero(sctx, S.me.hero, 'right', false, hx + lunge, hy, unit * HEROES[S.me.hero].h, ha ? ht : t, ha);
+  // monster
+  const m = b.m; const mh = unit * (m.boss ? 2.2 : b.st.h); const mx = W * .72, my = ground;
+  shadow(sctx, mx, my, mh * .35);
+  let row = 'idle', rt = 0;
+  if (b.monAnim) { const el = (now - b.monAnim.t0) / 1000; const lim = { attack: .6, hurt: .45, die: 99 }[b.monAnim.a]; if (el < lim) { row = b.monAnim.a; rt = el } else if (b.monAnim.a === 'die') { row = 'die'; rt = el } else b.monAnim = null }
+  const mlunge = row === 'attack' ? -Math.sin(Math.min(1, rt / .5) * Math.PI) * unit * .5 : 0;
+  sctx.save(); if (row === 'die') sctx.globalAlpha = Math.max(0, 1 - Math.max(0, rt - .7));
+  drawMon(sctx, m, mx + mlunge, my, mh, t, row, false, rt);
+  sctx.restore();
+  if (b.petals && now - b.petals < 1600) { const e = (now - b.petals) / 1600; for (let k = 0; k < 26; k++) { const a = k * 2.4 + e * 3; const r = unit * (.3 + e * 1.4) * (.6 + (k % 5) * .12); const px = hx + Math.cos(a) * r, py = ground - unit * .8 + Math.sin(a) * r * .55 - e * unit * .5; sctx.globalAlpha = 1 - e; sctx.fillStyle = k % 3 ? '#f4e9ff' : '#c9b4ff'; sctx.beginPath(); sctx.ellipse(px, py, unit * .07, unit * .045, a, 0, 6.283); sctx.fill() } sctx.globalAlpha = 1 }
+  if (b.flash > 0) { sctx.fillStyle = `rgba(255,255,255,${b.flash * .35})`; sctx.fillRect(0, 0, W, H); b.flash = Math.max(0, b.flash - .08) }
+  // damage pops
+  for (let i = b.pops.length - 1; i >= 0; i--) {
+    const p = b.pops[i]; const el = (now - p.t0) / 1000; if (el > 1.3) { b.pops.splice(i, 1); continue }
+    const x = p.side ? mx : hx, y = ground - (p.side ? mh : unit * 1.6) - el * 40;
+    sctx.globalAlpha = 1 - el / 1.3; sctx.font = `700 ${Math.round(unit * .32)}px "Pixelify Sans", sans-serif`; sctx.textAlign = 'center';
+    sctx.fillStyle = '#000'; sctx.fillText(p.txt, x + 2, y + 2); sctx.fillStyle = p.c; sctx.fillText(p.txt, x, y); sctx.globalAlpha = 1;
+  }
+  sctx.restore();
+}
+
+// ---------- Sweetlillac's floral spell ----------
+function bloomHeal(amount, from) {
+  const before = S.me.hp; S.me.hp = Math.min(maxHP(), S.me.hp + amount); const got = S.me.hp - before;
+  if (S.battle) { S.battle.petals = performance.now(); if (got) S.battle.pops.push({ txt: `+${got} HP`, c: '#c9f7d6', side: 0, t0: performance.now() }) }
+  if (from) toast(`${from}'s floral spell heals you (+${got} HP).`);
+  hud(); sendPresence(true);
+}
+function floralBloom(b) {
+  const amt = Math.ceil(maxHP() * .3);
+  bloomHeal(amt); sfx('chest');
+  if (NET.room) NET.room.emit('bloom', { run: S.game.run, f: S.game.floor, mid: b.mid, n: S.me.name, pct: .3 }).catch(() => { });
+}
+function listenBloom() {
+  if (!NET.room || listenBloom.on) return; listenBloom.on = 1;
+  NET.room.on('bloom', msg => {
+    const d = msg.data || {}; if (msg.sameTab || d.run !== S.game.run || d.f !== S.game.floor) return;
+    if (!S.battle || S.battle.mid !== d.mid) return;
+    bloomHeal(Math.ceil(maxHP() * clamp(+d.pct || 0, 0, .5)), String(d.n || 'A healer').slice(0, 14));
+  }, () => { });
+}
+
+// ---------- stairs and the ready vote ----------
+const readyKey = () => `${S.game.run}-${S.game.floor}`;
+function activeVoters() {
+  const ids = new Set();
+  if (S.canWrite && S.mode !== 'title') ids.add(myId());
+  for (const u of uniquePlayers()) if (u.pr.w && u.pr.run === S.game.run && u.pr.f === S.game.floor) ids.add(u.id);
+  return [...ids];
+}
+function nameOf(id) {
+  if (id === myId()) return S.me.name + ' (you)';
+  const u = uniquePlayers().find(u => u.id === id); if (u) return String(u.pr.n || 'Hero');
+  return (S.players[id] && S.players[id].name) || 'Hero';
+}
+function foundStairs() {
+  const next = S.game.floor + 1;
+  S.votedHide = null;
+  if (S.ready && S.ready.key === readyKey()) { onReady(); openReady(); return }
+  writeReady({ key: readyKey(), by: S.me.name, byId: myId(), at: Date.now(), votes: {} }, false);
+  sfx('stairs');
+}
+function onReady() {
+  const r = S.ready; const live = r && r.key === readyKey() && S.mode !== 'title' && S.F && !S.F.z.boss;
+  $('#ready-pill').hidden = !live || !$('#ready').hidden;
+  if (!live) { closeReady(); return }
+  const voters = activeVoters(); const votes = r.votes || {};
+  const yes = voters.filter(id => votes[id] === 1);
+  $('#ready-open').textContent = `Stairs found · ${yes.length}/${voters.length} ready`;
+  if (S.votedHide !== r.key) openReady();
+  renderReadyList(voters, votes);
+  // everyone ready: climb (the lowest id writes, the others back it up after a moment)
+  if (voters.length && yes.length === voters.length) {
+    const writer = voters.slice().sort()[0];
+    const go = () => { if (S.ready && S.ready.key === readyKey()) writeGame({ floor: Math.min(41, S.game.floor + 1) }) };
+    if (S.climbKey !== r.key) { S.climbKey = r.key; S.climbT = setTimeout(go, writer === myId() ? 600 : 2500 + Math.random() * 1500) }
+  } else if (S.climbKey === r.key) { clearTimeout(S.climbT); S.climbKey = null }
+}
+function renderReadyList(voters, votes) {
+  const r = S.ready; const next = S.game.floor + 1; const nz = zoneOf(next);
+  $('#ready-eyebrow').textContent = `${String(r.by || 'Someone')} found the staircase`;
+  $('#ready-title').textContent = next === 41 ? 'Climb to the Summit?' : `Climb to Floor ${next}?`;
+  $('#ready-sub').textContent = nz !== S.F.z ? `Next: ${nz.name}. Everyone must be ready before the class climbs.` : 'Everyone must be ready before the class climbs.';
+  $('#ready-list').innerHTML = voters.map(id => `<li><span>${esc(nameOf(id))}</span><span class="${votes[id] === 1 ? 'ok' : 'wait'}">${votes[id] === 1 ? 'READY' : 'NOT YET'}</span></li>`).join('');
+  const me = votes[myId()] === 1;
+  $('#ready-yes').textContent = me ? 'Ready ✓' : "I'm ready"; $('#ready-yes').disabled = me || !S.canWrite;
+  $('#ready-no').textContent = me ? 'Wait, not yet' : 'Not yet';
+  $('#ready-skip').hidden = !S.teacher;
+}
+function openReady() { if (S.mode === 'battle') { $('#ready-pill').hidden = false; return } $('#ready').hidden = false; $('#ready-pill').hidden = true }
+function closeReady() { $('#ready').hidden = true; }
+$('#ready-yes').onclick = () => { writeReady({ votes: { [myId()]: 1 } }, true); sfx('click') };
+$('#ready-no').onclick = () => {
+  if (S.ready && S.ready.votes && S.ready.votes[myId()] === 1) writeReady({ votes: { [myId()]: 0 } }, true);
+  S.votedHide = S.ready && S.ready.key; closeReady(); $('#ready-pill').hidden = false;
+};
+$('#ready-skip').onclick = () => { writeGame({ floor: Math.min(41, S.game.floor + 1) }) };
+$('#ready-open').onclick = () => { S.votedHide = null; onReady(); openReady() };
+
+// ---------- victory ----------
+function victory() {
+  const p = $('#help .panel');
+  $('#help .eyebrow').textContent = 'Floor 41 · The Summit';
+  $('#help h2').textContent = 'Grammar Castle is free!';
+  p.querySelector('ul').innerHTML = `<li>The Grammar Tyrant has fallen. Every correct answer from every student helped.</li><li>You reached level ${S.me.level}.</li><li>Your teacher can restart the climb from floor 1 for another adventure.</li>`;
+  $('#help').hidden = false; sfx('level');
+}
+
+// ---------- HUD ----------
+function hud() {
+  if (S.mode === 'title') return;
+  const mh = maxHP(); S.me.hp = Math.min(S.me.hp, mh);
+  $('#hud-name').textContent = S.me.name; $('#hud-lv').textContent = 'LV ' + S.me.level;
+  $('#hud-hp').style.width = (100 * S.me.hp / mh) + '%'; $('#hud-hp-t').textContent = `${S.me.hp} / ${mh}`;
+  $('#hud-xp').style.width = (100 * S.me.xp / xpNeed(S.me.level)) + '%';
+  const it = S.me.items;
+  $('#inv-potion-n').textContent = it.potion; $('#inv-hint-n').textContent = it.hint;
+  $('#inv-potion').disabled = it.potion < 1 || S.me.hp >= mh;
+  const bb = S.battle;
+  $('#b-use-hint').textContent = `Use hint (${it.hint})`; $('#b-use-hint').disabled = !bb || bb.phase !== 'ask' || bb.hinted || it.hint < 1;
+  $('#b-use-potion').textContent = `Drink potion (${it.potion})`; $('#b-use-potion').disabled = !bb || (bb.phase !== 'ask' && bb.phase !== 'feedback') || it.potion < 1 || S.me.hp >= mh;
+  if (S.F) { $('#hud-floor-n').textContent = S.F.z.boss ? 'FLOOR 41 · SUMMIT' : 'FLOOR ' + S.F.n; $('#hud-zone').textContent = S.F.z.name }
+  if (S.battle) battleHud();
+}
+function drawPortrait(canvas, hero) {
+  const c = canvas.getContext('2d'); const hm = META.heroes[hero]; const r = hm.rects[hm.anims.portrait[0]];
+  c.clearRect(0, 0, canvas.width, canvas.height); c.imageSmoothingQuality = 'high';
+  const s = Math.max(canvas.width / r[2], canvas.height / r[3]);
+  c.drawImage(IMG[HEROES[hero].img], r[0], r[1], r[2], r[3], (canvas.width - r[2] * s) / 2, 0, r[2] * s, r[3] * s);
+}
+function drawMinimap() {
+  const mm = $('#minimap'), c = mm.getContext('2d'); if (!S.F) return;
+  const F = S.F; const cs = Math.min(36, Math.floor(140 / Math.max(F.W, F.H * 1.15))); const gap = Math.round(cs * .28);
+  const w = F.W * cs + (F.W - 1) * gap + 8, h = F.H * cs + (F.H - 1) * gap + 8;
+  if (mm.width !== w * 2 || mm.height !== h * 2) { mm.width = w * 2; mm.height = h * 2; mm.style.width = w + 'px'; mm.style.height = h + 'px' }
+  c.setTransform(2, 0, 0, 2, 0, 0); c.clearRect(0, 0, w, h);
+  const pos = i => [4 + (i % F.W) * (cs + gap), 4 + ((i / F.W) | 0) * (cs + gap)];
+  const seen = S.floorDoc.seen || {};
+  c.strokeStyle = '#3b4266'; c.lineWidth = 3;
+  for (const cell of F.cells) { if (!seen[cell.i]) continue; const [x, y] = pos(cell.i); for (const [d, to] of Object.entries(cell.ex)) { const [tx, ty] = pos(to); c.beginPath(); c.moveTo(x + cs / 2, y + cs / 2); c.lineTo(tx + cs / 2, ty + cs / 2); c.stroke() } }
+  const here = {}; for (const p of others()) { here[p.presence.r] = (here[p.presence.r] || 0) + 1 }
+  for (const cell of F.cells) {
+    const [x, y] = pos(cell.i); const sn = !!seen[cell.i];
+    c.fillStyle = cell.i === S.room ? '#f2c35b' : sn ? '#3b4266' : '#141729'; c.fillRect(x, y, cs, cs);
+    c.strokeStyle = sn ? '#6d76a8' : '#262b45'; c.lineWidth = 1; c.strokeRect(x + .5, y + .5, cs - 1, cs - 1);
+    if (sn && cell.i === F.stairsRoom) { c.fillStyle = cell.i === S.room ? '#2a1a06' : '#f2c35b'; for (let k = 0; k < 3; k++) c.fillRect(x + cs * .22 + k * cs * .18, y + cs * .7 - k * cs * .18, cs * .2, cs * .1 + k * cs * .18) }
+    if (sn && cell.i === F.bossRoom) { c.fillStyle = '#ff6b6b'; c.beginPath(); c.arc(x + cs / 2, y + cs / 2, cs * .22, 0, 6.283); c.fill() }
+    if (here[cell.i]) { c.fillStyle = '#8fb8ff'; for (let k = 0; k < Math.min(4, here[cell.i]); k++) c.fillRect(x + 3 + k * 5, y + 3, 4, 4) }
+  }
+}
+function renderParty() {
+  if (S.mode === 'title') { netLine(); return }
+  const el = $('#party'); const list = uniquePlayers().filter(u => u.pr.run === S.game.run && u.pr.f === S.game.floor && u.id !== myId());
+  el.hidden = !list.length;
+  el.innerHTML = list.slice(0, 6).map(u => `<div class="pp"><span class="dot" style="background:${HEROES[u.pr.h] ? HEROES[u.pr.h].color : '#fff'}"></span><span>${esc(String(u.pr.n || 'Hero'))}</span><em>${u.pr.b ? 'in battle' : u.pr.r === S.room ? 'here' : 'LV ' + (u.pr.lv | 0)}</em></div>`).join('') + (list.length > 6 ? `<div class="pp">+${list.length - 6} more</div>` : '');
+  drawMinimap();
+}
+function renderClass() {
+  if ($('#classp').hidden) return;
+  const rows = new Map();
+  for (const [id, d] of Object.entries(S.players)) if (d && d.name) rows.set(id, { name: d.name, level: d.level, stats: d.stats || {}, online: false });
+  rows.set(myId(), { name: S.me.name, level: S.me.level, stats: S.me.stats, online: true, me: true });
+  for (const u of uniquePlayers()) { const r = rows.get(u.id) || { name: u.pr.n, level: u.pr.lv, stats: {} }; r.online = true; r.where = u.pr; rows.set(u.id, r) }
+  const body = [...rows.values()].sort((a, b) => (b.level || 0) - (a.level || 0)).map(r => {
+    let c = 0, w = 0, worst = null, wr = 2;
+    for (const [tp, s] of Object.entries(r.stats || {})) { c += s.c || 0; w += s.w || 0; const n = (s.c || 0) + (s.w || 0); if (n >= 2) { const rate = (s.c || 0) / n; if (rate < wr) { wr = rate; worst = tp } } }
+    const acc = c + w ? Math.round(100 * c / (c + w)) + '%' : '–';
+    return `<tr><td>${esc(String(r.name || 'Hero'))}${r.me ? ' (you)' : ''}</td><td class="num">${r.level || 1}</td><td class="num">${acc}</td><td>${worst && wr < .8 ? esc(worst) : '–'}</td><td>${r.online ? (r.where && r.where.b ? 'in battle' : 'online') : 'away'}</td></tr>`;
+  }).join('');
+  $('#class-body').innerHTML = body;
+  $('#teacher').hidden = !S.teacher;
+  $('#t-note').textContent = S.net ? 'Moving or restarting affects every student on this link.' : 'Solo mode: these controls only change your own game.';
+}
+
+// ---------- panels ----------
+function closePanels() { for (const id of ['#classp', '#help']) $(id).hidden = true; if (S.mode === 'paused') S.mode = 'play' }
+$('#btn-class').onclick = () => { $('#classp').hidden = false; renderClass(); S.mode = 'paused' };
+$('#class-close').onclick = closePanels;
+$('#btn-menu').onclick = () => {
+  S.resetChecked = false; setTimeout(() => { resetIfEmpty(); renderBoard() }, 0);
+  if (S.battle) endBattle(true);
+  closePanels(); closeReady(); saveMe();
+  S.mode = 'title'; S.moving = false; S.target = null;
+  for (const id of ['#hud-me', '#dock', '#dock-left', '#party', '#ready-pill']) $(id).hidden = true;
+  $('#title').hidden = false; syncTitle(); netLine();
+  if (NET.room) { lastPres = ''; NET.room.presence({ f: null, b: null, w: 0 }).catch(() => { }) }
+};
+$('#btn-help').onclick = () => { $('#help').hidden = false; S.mode = 'paused' };
+$('#help-close').onclick = closePanels;
+$('#btn-sound').onclick = () => { S.sound = !S.sound; LS.set('gs-sound', S.sound); $('#btn-sound').textContent = S.sound ? 'Sound on' : 'Sound off'; $('#btn-sound').setAttribute('aria-pressed', S.sound) };
+$('#b-flee').onclick = flee;
+$('#b-use-hint').onclick = useHint;
+$('#b-use-potion').onclick = usePotion;
+$('#inv-potion').onclick = usePotion;
+$('#b-continue').onclick = continueBattle;
+$('#t-move').onclick = () => { const n = clamp(parseInt($('#t-floor').value, 10) || 1, 1, 41); writeGame({ floor: n }); toast(`Class moved to floor ${n}.`); closePanels() };
+$('#t-skip').onclick = () => { writeGame({ floor: Math.min(41, S.game.floor + 1) }); closePanels() };
+$('#t-reset').onclick = () => {
+  const b = $('#t-reset');
+  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'Tap again to restart everyone'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = 'Restart from floor 1' }, 3500); return }
+  b.dataset.confirm = ''; b.textContent = 'Restart from floor 1';
+  writeGame({ floor: 1, seed: Math.random().toString(36).slice(2, 9), run: 'r' + Date.now().toString(36) }); S.victoryShown = false; closePanels();
+};
+
+function toast(msg) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg; $('#toasts').appendChild(d); setTimeout(() => d.remove(), 3300) }
+
+// ---------- sound ----------
+let AC = null;
+function sfx(kind) {
+  if (!S.sound) return;
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)() } catch { return }
+  const now = AC.currentTime;
+  const tone = (f, d, type = 'square', v = .06, at = 0, f2) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, now + at); if (f2) o.frequency.exponentialRampToValueAtTime(f2, now + at + d); g.gain.setValueAtTime(v, now + at); g.gain.exponentialRampToValueAtTime(.0001, now + at + d); o.connect(g).connect(AC.destination); o.start(now + at); o.stop(now + at + d + .02) };
+  const seq = { hit: [[660, .08], [880, .1, 'square', .06, .07]], crit: [[660, .07], [990, .07, 'square', .06, .06], [1320, .16, 'square', .06, .12]], miss: [[220, .25, 'sawtooth', .05, 0, 110]], win: [[523, .1], [659, .1, 'square', .06, .1], [784, .1, 'square', .06, .2], [1046, .25, 'square', .06, .3]], level: [[392, .1], [523, .1, 'square', .06, .1], [659, .1, 'square', .06, .2], [784, .3, 'triangle', .08, .3]], door: [[180, .15, 'triangle', .05, 0, 90]], chest: [[880, .08, 'triangle'], [1175, .08, 'triangle', .06, .08], [1568, .2, 'triangle', .06, .16]], encounter: [[330, .08], [247, .08, 'square', .06, .09], [330, .14, 'square', .06, .18]], stairs: [[440, .12, 'triangle'], [554, .12, 'triangle', .06, .12], [659, .2, 'triangle', .06, .24]], click: [[700, .05, 'triangle', .04]] }[kind] || [];
+  for (const s of seq) tone(...s);
+}
+
+// ---------- title ----------
+let chosen = S.me.hero || 'knight';
+function syncTitle() {
+  $('#player-name').value = S.me.name || '';
+  chosen = S.me.hero || chosen; for (const b of document.querySelectorAll('.hero-card')) b.setAttribute('aria-pressed', b.dataset.hero === chosen);
+}
+for (const b of document.querySelectorAll('.hero-card')) b.onclick = () => { chosen = b.dataset.hero; for (const o of document.querySelectorAll('.hero-card')) o.setAttribute('aria-pressed', o === b); sfx('click') };
+function titleHeroes(now) {
+  for (const b of document.querySelectorAll('.hero-card')) {
+    const c = b.querySelector('canvas'), x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
+    const g = x.createRadialGradient(75, 120, 5, 75, 120, 80); g.addColorStop(0, b.dataset.hero === chosen ? 'rgba(242,195,91,.35)' : 'rgba(120,140,220,.15)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 150, 150);
+    shadow(x, 75, 138, 26);
+    drawHero(x, b.dataset.hero, 'down', b.dataset.hero === chosen, 75, 140, 120, now / 1000);
+  }
+}
+$('#start-btn').onclick = () => {
+  S.me.name = cleanName($('#player-name').value); S.me.hero = chosen; if (!S.me.hp) S.me.hp = maxHP();
+  $('#title').hidden = true; for (const id of ['#hud-me', '#dock', '#dock-left']) $(id).hidden = false;
+  S.mode = 'play'; drawPortrait($('#hud-portrait'), S.me.hero);
+  if (!S.net) { const g = LS.get('gs-game', null); if (g) S.game = g; }
+  loadedKey = ''; applyGame(); saveMe(); sfx('stairs');
+  if (!S.net) toast('Solo mode: each device has its own castle until Firebase is set up.');
+  maybeReset();
+};
+
+// ---------- scoreboard ----------
+function correctOf(stats) { let c = 0; for (const k in stats || {}) c += +(stats[k] && stats[k].c) || 0; return c }
+function renderBoard() {
+  const rows = new Map();
+  for (const [id, d] of Object.entries(S.players || {})) {
+    if (!d || !d.name) continue;
+    if ((d.season || '') !== (S.game.season || '')) continue;   // from an earlier game
+    rows.set(id, { name: String(d.name).slice(0, 14), hero: HEROES[d.hero] ? d.hero : 'knight', level: +d.level || 1, battles: +d.battles || 0, correct: correctOf(d.stats) });
+  }
+  if (S.me.name) rows.set(myId(), { name: S.me.name, hero: S.me.hero, level: S.me.level, battles: S.me.battles || 0, correct: correctOf(S.me.stats), me: true });
+  const online = new Set(uniquePlayers().filter(u => u.pr.f).map(u => u.id)); if (S.me.name && S.mode !== 'title') online.add(myId()); else online.delete(myId());
+  const list = [...rows.entries()].map(([id, r]) => ({ id, ...r, on: online.has(id) }))
+    .sort((a, b) => b.level - a.level || b.correct - a.correct || b.battles - a.battles || a.name.localeCompare(b.name));
+  $('#board-empty').hidden = list.length > 0;
+  $('#board-body').innerHTML = list.map((r, i) => `<tr class="${r.me ? 'me' : ''} ${i === 0 ? 'top1' : ''}">
+    <td class="num">${i + 1}</td>
+    <td><div class="who"><img class="face" src="a/full_${r.hero}.webp" alt=""><span><b>${esc(r.name)}${r.me ? ' (you)' : ''}${r.on ? '<span class="on" title="Playing now"></span>' : ''}</b><small>${HEROES[r.hero].name}</small></span></div></td>
+    <td class="num">${r.battles}</td><td class="num">${r.correct}</td><td class="num">${r.level}</td></tr>`).join('');
+  $('#board-live').hidden = !S.net;
+}
+
+// ---------- empty castle reset ----------
+// While anyone is playing, the castle's shared "still here" clock ticks about every 45 seconds.
+// When someone enters and that clock has been quiet for 3 minutes, with no one else in the game,
+// everybody must have left: the castle starts over on floor 1 with every chest and monster back.
+const QUIET_MS = 3 * 60 * 1000, BEAT_MS = 45 * 1000;
+function sendBeat() {
+  const now = Date.now(); S.beat = now;
+  if (NET.db && S.canWrite) NET.db.doc('game/state').update({ beat: now }).catch(() => { });
+  else LS.set('gs-beat', now);
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function maybeReset() {
+  if (S.resetChecked) { sendBeat(); return }
+  S.resetChecked = true;
+  if (NET.db) { for (let k = 0; k < 25 && !S.gameLoaded; k++) await sleep(200) }
+  if (NET.room) { for (let k = 0; k < 15 && !NET.room.connected(); k++) await sleep(200); await sleep(2500) }   // let everyone already inside show up
+  if (S.mode === 'title') { S.resetChecked = false; return }
+  if (resetIfEmpty()) toast('A fresh castle! All chests and monsters are back, and the scoreboard starts again.');
+  sendBeat();
+}
+function castleEmpty() {
+  const beat = NET.db ? (S.beat || 0) : (+LS.get('gs-beat', 0) || 0);
+  const others = uniquePlayers().filter(u => u.id !== myId() && u.pr.f && u.pr.run === S.game.run);
+  // nobody else inside? the live room knows; without it, fall back to the quiet clock
+  return NET.room && NET.room.connected() ? !others.length : NET.db ? (!beat || Date.now() - beat > QUIET_MS) : true;
+}
+function hasProgress() {
+  const fd = S.floorDoc || {}; let any = false;
+  for (const p of Object.values(S.players || {})) if (p && (p.season || '') === (S.game.season || '') && ((+p.battles || 0) > 0 || correctOf(p.stats) > 0)) any = true;
+  return any || S.game.floor > 1 || Object.keys(fd.hits || {}).length > 0 || Object.keys(fd.chests || {}).length > 0 || (S.me.battles || 0) > 0 || correctOf(S.me.stats) > 0;
+}
+// A fresh castle is a whole new game: castle, scoreboard and every hero's progress start again.
+function resetIfEmpty() {
+  if (!S.canWrite || !castleEmpty() || !hasProgress()) return false;
+  const run = 'r' + Date.now().toString(36);
+  const fresh = { floor: 1, run, season: run, beat: Date.now() };
+  if (NET.db) writeGame(fresh); else { Object.assign(S.game, fresh); LS.set('gs-game', S.game); LS.set('gs-floor', null); applyGame() }
+  checkSeason(); return true;
+}
+function checkSeason() {
+  const season = S.game.season || '';
+  if (!season || S.me.season === season) return;
+  Object.assign(S.me, { level: 1, xp: 0, stats: {}, battles: 0, awarded: {}, items: { hint: 1, potion: 1 }, season });
+  S.me.hp = maxHP(); hud(); saveMe(true); renderBoard();
+}
+setInterval(() => {
+  if (S.mode === 'title' || !S.resetChecked) return;
+  // only one player needs to tick the clock: the one with the lowest id among those playing
+  const ids = uniquePlayers().filter(u => u.pr.f && u.pr.run === S.game.run).map(u => u.id).concat(myId()).sort();
+  if (!NET.room || ids[0] === myId()) sendBeat();
+}, BEAT_MS);
+$('#player-name').addEventListener('keydown', e => { if (e.key === 'Enter' && !$('#start-btn').disabled) $('#start-btn').click() });
+
+// ---------- loop ----------
+let last = performance.now();
+function frame(ts) {
+  const now = performance.now();
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  requestAnimationFrame(frame);
+  try {
+    update(dt, now);
+      render(now);
+    if (S.battle) renderStage(now);
+    sendPresence(false);
+  } catch (e) { if (!frame.warned) { frame.warned = 1; console.error(e) } }
+}
+
+// hot reload keeps the player's spot when the page is republished
+window.claude?.hot?.snapshot?.(() => ({ room: S.room, px: S.px, py: S.py, mode: S.mode === 'title' ? 'title' : 'play' }));
+async function boot(hot) {
+  resize(); syncTitle();
+  initNet();
+  await loadAssets(p => { $('#net-line').textContent = `Loading the castle… ${Math.round(p * 100)}%` });
+  $('#start-btn').disabled = false; netLine(); renderBoard();
+  if (!S.net) { S.game = LS.get('gs-game', S.game); checkSeason() }
+  applyGame();
+  if (hot && hot.mode === 'play' && S.me.name) { $('#start-btn').click(); if (S.F && S.F.rooms[hot.room]) { S.room = hot.room; S.px = hot.px; S.py = hot.py } }
+  requestAnimationFrame(frame);
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+</script>
+
+</body>
+</html>
