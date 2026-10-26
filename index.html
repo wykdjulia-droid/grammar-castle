@@ -115,7 +115,10 @@ kbd{font-family:var(--display);font-size:11px;border:1px solid var(--edge);borde
 #stage{position:absolute;inset:0;width:100%;height:100%}
 .b-mon{position:absolute;right:10px;top:10px;width:min(46%,280px);background:#0b0d18d9;border:2px solid var(--edge);border-radius:4px;padding:6px 8px;display:grid;gap:4px}
 .b-me{position:absolute;left:10px;top:10px;width:min(46%,280px);background:#0b0d18d9;border:2px solid var(--edge);border-radius:4px;padding:6px 8px;display:grid;gap:4px}
-.b-mon .t,.b-me .t{display:flex;justify-content:space-between;gap:6px;font-weight:700;font-size:14px}
+.b-mon,.b-me{box-sizing:border-box}
+.b-mon .t,.b-me .t{display:flex;justify-content:space-between;gap:6px;font-weight:700;font-size:14px;min-width:0}
+.b-mon .t b,.b-me .t b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-mon .t span,.b-me .t span{flex:none;margin-right:2px}
 .b-mon .t span,.b-me .t span{font-family:var(--display);font-size:11px;color:var(--gold);white-space:nowrap}
 #b-allies{position:absolute;left:10px;bottom:8px;font-size:13px;color:var(--parch);text-shadow:0 1px 0 #000}
 .b-card{width:min(100%,880px);background:linear-gradient(var(--stone-2),var(--stone));border:3px solid var(--edge);outline:2px solid #000;border-radius:6px;padding:14px 16px;display:grid;gap:10px}
@@ -134,6 +137,8 @@ kbd{font-family:var(--display);font-size:11px;border:1px solid var(--edge);borde
 #b-fb{display:grid;gap:10px;border-top:2px dashed var(--edge);padding-top:10px}
 #b-fb-text{margin:0;font-size:15px;line-height:1.45}
 #b-fb-text b{color:var(--gold)}
+#b-fb-text b.fb-ok{color:var(--good)}
+#b-continue:disabled{opacity:.75;cursor:wait;font-variant-numeric:tabular-nums}
 .b-foot{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 .b-foot small{color:var(--dim);font-size:13px}
 .b-items{display:flex;gap:8px;flex-wrap:wrap}
@@ -246,7 +251,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
   .hero-card .art{height:150px}
   #battle{grid-template-rows:minmax(120px,1fr) auto}
   #stage-wrap{height:min(100%,300px)}
-  .b-me,.b-mon{width:calc(50% - 14px);top:6px;padding:4px 6px}
+  .b-me,.b-mon{width:calc(50% - 10px);top:6px;padding:4px 6px}
   .b-me{left:6px}.b-mon{right:6px}
   .b-mon .t,.b-me .t{font-size:12px}
 }
@@ -288,7 +293,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
   <!-- Title -->
   <div class="modal" id="title">
     <div class="panel">
-      <div class="eyebrow">A class adventure in 41 floors · v5</div>
+      <div class="eyebrow">A class adventure in 41 floors · v10</div>
       <h1 class="logo">Grammar Castle</h1>
       <p class="tag">Climb from the dungeon to the top of the tower. Beat monsters with good grammar. Find the stairs together.</p>
       <label for="player-name">Your hero's name
@@ -624,6 +629,18 @@ const ROOMS = {
   castle:  { img: 'room_castle',  tile: 60, floor: [120, 218, 766, 788], doors: { n: [442, 206], s: [442, 800], w: [74, 500], e: [812, 500] }, blocks: [] },
   tower:   { img: 'room_tower',   tile: 52, floor: [74, 194, 686, 558], doors: { n: [380, 182], s: [380, 566], w: [44, 440], e: [716, 440] }, blocks: [] },
 };
+ROOMS.summit = { img: 'room_summit', tile: 80, floor: [255, 568, 1062, 985], doors: { n: [656, 560], s: [656, 992], w: [255, 780], e: [1062, 780] }, blocks: [], sGap: true, rain: true, bare: true };
+// Class games (with a code) are five big maze levels: Dungeon, Cellars, Castle, Tower, Rooftop.
+// They reuse floors 1, 11, 21, 31 and 41; solo play keeps every floor from 1 to 41.
+const CLASS = {
+  1:  { hits: [2, 3], dmg: 10, need: 10, grid: [4, 3] },
+  11: { hits: [3, 4], dmg: 20, need: 20, grid: [4, 3] },
+  21: { hits: [4, 5], dmg: 30, need: 30, grid: [4, 4] },
+  31: { hits: [5, 6], dmg: 40, need: 40, grid: [4, 4] },
+  41: { hits: [5, 6], dmg: 40, knight: 12 },
+};
+const classLv = () => S.code ? CLASS[S.game.floor] || CLASS[1] : null;
+const nextFloor = () => Math.min(41, S.game.floor + (S.code ? 10 : 1));
 const ZONES = [
   { key: 'blue',   from: 1,  to: 10, name: 'Sapphire Dungeon', rooms: ['blue'], props: 'blue', mons: ['puff', 'slime', 'bat'], tier: 0, light: '120,180,255', bg: '#070d1c', grid: [3, 3], dark: .30 },
   { key: 'red',    from: 11, to: 20, name: 'Crimson Cellars',  rooms: ['redbase', 'brown', 'moss'], props: 'red', mons: ['bat', 'spider', 'skeleton', 'slime'], mimic: true, tier: 1, light: '255,150,70', bg: '#120b0b', grid: [4, 3], dark: .30 },
@@ -661,12 +678,13 @@ const HEROES = {
   lilac:  { name: 'Sweetlillac', img: 'hero_lilac', h: 1.5, color: '#c9b4ff', atk: 'attack', crit: 'cast', healer: true },
   crim:   { name: 'Crimson', img: 'hero_crim', h: 1.62, color: '#ff6b6b', atk: 'attack', crit: 'cast', assassin: true },
 };
-const BOSS = { name: 'The Grammar Tyrant', type: 'knight', h: 3.4, hits: 50, xp: 400 };
+const BOSS = { name: 'The Shadow Dragon', type: 'knight', h: 3.4, hits: 50, xp: 400 };
+const DRAGON = {"rects":{"idle3":[0,0,352,243,182.0,243],"idle0":[354,0,353,241,180.0,241],"misc3":[709,0,351,241,181.0,241],"misc0":[1062,0,366,241,187.0,241],"fire1":[1430,0,359,221,225.0,221],"fire2":[0,245,465,219,305.0,219],"fire3":[467,245,346,219,205.0,219],"misc2":[815,245,379,217,180.0,217],"fire0":[1196,245,354,215,168.0,215]},"anims":{"idle":["idle0","idle3","idle0","misc3"],"attack":["fire0","fire1","fire2","fire3"],"hurt":["misc2","misc0"]}};
 
 // ---------- assets ----------
 const IMG = {};
 function loadAssets(onProgress) {
-  const names = [...Object.values(ROOMS).map(r => r.img), 'props_blue', 'props_red', 'props_castle', 'props_tower', 'hero_knight', 'hero_mage', 'hero_lilac', 'hero_crim', ...Object.keys(MONS).map(k => 'mon_' + k)];
+  const names = [...Object.values(ROOMS).map(r => r.img), 'props_blue', 'props_red', 'props_castle', 'props_tower', 'hero_knight', 'hero_mage', 'hero_lilac', 'hero_crim', 'boss_dragon', ...Object.keys(MONS).map(k => 'mon_' + k)];
   let done = 0;
   return Promise.all(names.map(n => new Promise(res => {
     const im = new Image(); im.onload = im.onerror = () => { done++; onProgress(done / names.length); res() }; im.src = 'a/' + n + '.webp'; IMG[n] = im;
@@ -863,7 +881,7 @@ function renderTeach() {
   const armed = S.bootArm && Date.now() < S.bootArm.until ? S.bootArm.id : null, keep = armed ? { [armed]: 1 } : {};
   $('#tv-rows').innerHTML = list.map((r, i) => {
     const m = i < 3 ? ` m${i + 1}` : '', on = live.has(r.id);
-    const status = on ? (fighting.has(r.id) ? 'In battle' : `Floor ${r.floor}`) : 'Away';
+    const status = on ? (fighting.has(r.id) ? 'In battle' : zoneOf(r.floor).name) : 'Away';
     return `<div class="tv-row${m}">
       <span class="tv-rk">${i < 3 ? `<span class="tv-medal">${i + 1}</span>` : i + 1}</span>
       <img class="tv-face" src="a/full_${r.hero}.webp" alt="">
@@ -942,7 +960,9 @@ function others() {
 const DIRS = { n: [0, -1, 's'], s: [0, 1, 'n'], w: [-1, 0, 'e'], e: [1, 0, 'w'] };
 function genFloor(n) {
   const z = zoneOf(n), r = rng(hashStr(S.game.seed + ':' + n));
-  const [W, H] = z.grid, N = W * H;
+  // Two paces: a class game (with a code) is a ~2 hour climb; solo play is a longer ~6-7 hour adventure.
+  const quick = !!S.code;
+  const [W, H] = z.boss ? z.grid : quick ? (CLASS[n] || CLASS[1]).grid : (z.key === 'blue' || z.key === 'red' ? [3, 2] : [3, 3]), N = W * H;
   const cells = []; for (let i = 0; i < N; i++) cells.push({ i, gx: i % W, gy: (i / W) | 0, ex: {} });
   const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? null : cells[y * W + x];
   const nbrs = c => Object.entries(DIRS).map(([d, [dx, dy]]) => ({ d, c: at(c.gx + dx, c.gy + dy) })).filter(o => o.c);
@@ -957,13 +977,13 @@ function genFloor(n) {
   const maxD = Math.max(...dist); const far = cells.filter(c => dist[c.i] === maxD);
   const stairsRoom = z.boss ? -1 : pick(r, far).i;
   const bossRoom = z.boss ? 0 : -1;
-  const rooms = cells.map(c => buildRoom(c, z, rng(hashStr(S.game.seed + ':' + n + ':' + c.i)), c.i === stairsRoom, c.i === bossRoom, n));
+  const rooms = cells.map(c => buildRoom(c, z, rng(hashStr(S.game.seed + ':' + n + ':' + c.i)), c.i === stairsRoom, c.i === bossRoom, n, maxD ? dist[c.i] / maxD : 0));
   const spawnList = cells.filter(c => c.i !== stairsRoom && c.i !== bossRoom).sort((a, b) => dist[a.i] - dist[b.i] || a.i - b.i).map(c => c.i);
   return { n, z, W, H, cells, rooms, stairsRoom, bossRoom, spawnList, dist };
 }
 function propRect(zk, k) { return (META.props[zk] || {})[k] }
-function buildRoom(cell, z, r, isStairs, isBoss, n) {
-  const style = pick(r, z.rooms), RD = ROOMS[style], t = RD.tile, [x0, y0, x1, y1] = RD.floor, deco = DECOR[z.props];
+function buildRoom(cell, z, r, isStairs, isBoss, n, depth) {
+  const style = isBoss ? 'summit' : pick(r, z.rooms), RD = ROOMS[style], t = RD.tile, [x0, y0, x1, y1] = RD.floor, deco = DECOR[z.props];
   const room = { i: cell.i, style, RD, ex: cell.ex, props: [], decals: [], wall: [], lights: [], mons: [], chest: null, stairs: null, boss: null };
   const doorPt = d => d === 'n' ? [RD.doors.n[0], y0] : d === 's' ? [RD.doors.s[0], y1] : d === 'w' ? [x0, RD.doors.w[1]] : [x1, RD.doors.e[1]];
   const avoid = Object.keys(cell.ex).map(d => { const [x, y] = doorPt(d); return { x, y, r: 1.9 * t } });
@@ -975,7 +995,7 @@ function buildRoom(cell, z, r, isStairs, isBoss, n) {
   }
   if (isBoss) avoid.push({ x: (x0 + x1) / 2, y: (y0 + y1) / 2, r: 3.2 * t });
   // wall decorations along the back wall
-  const nw = deco.wall.length ? 2 + Math.floor(r() * 3) : 0;
+  const nw = deco.wall.length && !RD.bare ? 2 + Math.floor(r() * 3) : 0;
   for (let k = 0; k < nw; k++) {
     const x = lerp(x0 + t * .5, x1 - t * .5, (k + .5 + (r() - .5) * .5) / nw);
     if (cell.ex.n !== undefined && Math.abs(x - RD.doors.n[0]) < t * 1.6) continue;
@@ -985,9 +1005,9 @@ function buildRoom(cell, z, r, isStairs, isBoss, n) {
   }
   // decal (rug) in the middle of castle and tower rooms
   if (deco.decal.length && r() < .55 && !isBoss) room.decals.push({ k: pick(r, deco.decal), x: lerp(x0, x1, .5 + (r() - .5) * .2), y: lerp(y0, y1, .58) });
-  if (isBoss && propRect(z.props, 'rug2')) room.decals.push({ k: 'rug2', x: (x0 + x1) / 2, y: (y0 + y1) / 2 + t });
+  if (isBoss && !RD.bare && propRect(z.props, 'rug2')) room.decals.push({ k: 'rug2', x: (x0 + x1) / 2, y: (y0 + y1) / 2 + t });
   // furniture: along the edges, never blocking doors
-  const nf = 2 + Math.floor(r() * 4);
+  const nf = RD.bare ? 0 : 2 + Math.floor(r() * 4);
   for (let k = 0, tries = 0; k < nf && tries < 40; tries++) {
     const kk = pick(r, deco.floor); const pr = propRect(z.props, kk); if (!pr) continue;
     const w = pr[2], h = pr[3]; const side = r();
@@ -1015,13 +1035,19 @@ function buildRoom(cell, z, r, isStairs, isBoss, n) {
     room.boss = { id: 'boss', type: BOSS.type, x: (x0 + x1) / 2, y: y0 + (y1 - y0) * .42, boss: true };
     room.mons.push(room.boss);
   } else {
-    const count = isStairs ? 1 : (r() < .25 ? 0 : 1 + Math.floor(r() * 2));
-    for (let k = 0; k < count; k++) {
-      const [mx, my] = spot(t * 1.9); room.mons.push({ id: `m${cell.i}-${k}`, type: pick(r, z.mons), x: mx, y: my, hx: mx, hy: my, ph: r() * 6.28, zp });
+    // class games: two monsters in every room, stronger the deeper into the maze; the rooftop's first room holds the Dark Knight
+    const cls = S.code ? CLASS[n] : null;
+    if (cls && cls.knight) {
+      const [mx, my] = spot(t * 1.9); room.mons.push({ id: `k${cell.i}`, type: 'knight', x: mx, y: my, hx: mx, hy: my, ph: 0, elite: true, guard: true, mini: true, zp, lv: 45 });
+    } else {
+      const count = isStairs ? (cls ? 0 : 1) : cls ? 2 : (r() < .25 ? 0 : 1 + Math.floor(r() * 2));
+      for (let k = 0; k < count; k++) {
+        const [mx, my] = spot(t * 1.9); room.mons.push({ id: `m${cell.i}-${k}`, type: pick(r, z.mons), x: mx, y: my, hx: mx, hy: my, ph: r() * 6.28, zp, lv: cls ? n + Math.min(8, Math.round(depth * 8 + r())) : 0, hv: cls ? Math.floor(r() * 2) : 0 });
+      }
     }
     if (isStairs) {
       const strongest = z.mons[z.mons.length - 1];
-      room.mons.push({ id: `g${cell.i}`, type: strongest, x: room.stairs.x, y: room.stairs.y + t * 1.6, hx: room.stairs.x, hy: room.stairs.y + t * 1.6, ph: 0, elite: true, guard: true, zp });
+      room.mons.push({ id: `g${cell.i}`, type: strongest, x: room.stairs.x, y: room.stairs.y + t * 1.6, hx: room.stairs.x, hy: room.stairs.y + t * 1.6, ph: 0, elite: true, guard: true, zp, lv: S.code ? n + 9 : 0 });
     }
   }
   return room;
@@ -1033,22 +1059,39 @@ function buildRoom(cell, z, r, isStairs, isBoss, n) {
 // A wrong answer lets the monster hit for half the health of a hero at the monster's level,
 // so a hero of the same level falls after two wrong answers. Against the boss, two wrong answers always knock you out.
 const hpAt = L => 30 + 6 * (L - 1);
-const floorHits = n => n >= 41 ? BOSS.hits : n <= 10 ? 2 : n <= 30 ? 3 : 4;
+const floorHits = n => n >= 41 ? BOSS.hits : S.code ? (n <= 20 ? 1 : 2) : n <= 10 ? 2 : n <= 30 ? 3 : 4;
+// XP is tuned so a typical hero gains about one level per floor: ~3 kills a floor in a class game, ~8 when playing solo.
+const killsPerLevel = () => S.code ? 3 : 8;
 const RESPAWN_MS = 30000;
 function monStats(m) {
   const n = S.F ? S.F.n : S.game.floor;
-  if (m.boss) return { name: BOSS.name, lvl: 100, hits: BOSS.hits, dmg: Math.ceil(maxHP() / 2), xp: BOSS.xp, h: BOSS.h };
+  const cls = S.code && !m.boss ? CLASS[n] : null;
+  if (cls) {
+    const b = MONS[m.type], lvl = m.lv || n;
+    // the stair guardian is much bigger and needs 5 more correct answers than the level's toughest monster
+    const hits = m.mini ? cls.knight : m.guard ? cls.hits[1] + 5 : cls.hits[0] + (m.hv || 0);
+    const name = m.mini ? 'Dark Knight' : (m.guard ? 'Guardian ' : '') + b.name;
+    return { name, lvl, hits, dmg: cls.dmg, xp: Math.ceil(xpNeed(lvl) / (m.guard ? 1 : 3)), h: m.mini ? 2.3 : m.guard ? b.h * 1.7 : b.h };
+  }
+  if (m.boss) return { name: BOSS.name, lvl: 100, hits: BOSS.hits, dmg: Math.ceil(maxHP() / 2), xp: BOSS.xp, h: 3.4 };
   const b = MONS[m.type], lvl = n;
-  return { name: (m.elite ? 'Guardian ' : '') + b.name, lvl, hits: floorHits(n), dmg: Math.ceil(hpAt(lvl) / 2), xp: Math.round(b.xp * (1 + .15 * (lvl - 1)) * (m.elite ? 2 : 1)), h: b.h * (m.elite ? 1.18 : 1) };
+  return { name: (m.elite ? 'Guardian ' : '') + b.name, lvl, hits: floorHits(n), dmg: Math.ceil(hpAt(lvl) / 2), xp: Math.ceil(xpNeed(lvl) / killsPerLevel() * (m.elite ? 1.5 : 1)), h: b.h * (m.elite ? 1.18 : 1) };
 }
 // Ordinary monsters come back 30 seconds after they fall: each comeback is a new "life" with fresh wounds.
 function lifeOf(m) { return (m.boss || m.chest || m.guard) ? 0 : (+(S.floorDoc.lives && S.floorDoc.lives[m.id]) || 0) }
 function cid(m) { const l = lifeOf(m); return l ? m.id + '~' + l : m.id }
 function hitsOn(id) { const h = S.floorDoc.hits && S.floorDoc.hits[id]; let s = 0; if (h) for (const k in h) s += +h[k] || 0; return s }
 function isDead(m) { return hitsOn(cid(m)) >= monStats(m).hits }
+// In a class game a room's doors open once both its monsters have fallen, and stay open for everyone.
+function roomLocked(room) {
+  if (!S.code || room.stairs || room.boss || !room.mons.length) return false;
+  if (S.floorDoc.cleared && S.floorDoc.cleared[room.i]) return false;
+  return !room.mons.every(m => isDead(m));
+}
 setInterval(() => {
   if (!S.F || S.mode === 'title') return;
   const now = Date.now(), fd = S.floorDoc;
+  if (S.code) for (const room of S.F.rooms) if (!(fd.cleared && fd.cleared[room.i]) && room.mons.length && !room.stairs && !room.boss && room.mons.every(m => isDead(m))) writeFloor({ cleared: { [room.i]: 1 } });
   for (const room of S.F.rooms) for (const m of room.mons) {
     if (m.boss || m.guard || m.chest || !isDead(m)) continue;
     const id = cid(m), t = fd.dead && +fd.dead[id];
@@ -1120,7 +1163,20 @@ function monFrame(type, row, t, fps) {
   else idx = Math.floor(t * fps) % n;
   return [idx * mm.w, ri * mm.h, mm.w, mm.h];
 }
+function drawDragon(c, cx, by, heightPx, t, row, rt) {
+  // the boss is about four normal monsters big; his frames face left, toward the heroes
+  const list = DRAGON.anims[row] || DRAGON.anims.idle;
+  const fps = row === 'idle' ? 1.6 : row === 'attack' ? 7 : 5;
+  let i = row === 'idle' ? Math.floor(t * fps) % list.length : Math.min(list.length - 1, Math.floor(rt * fps));
+  const [sx, sy, sw, sh, ax, ay] = DRAGON.rects[list[i]];
+  const base = DRAGON.rects[DRAGON.anims.idle[0]][5], k = heightPx / base;
+  const breathe = row === 'idle' ? Math.sin(t * 2) * heightPx * .008 : 0;
+  c.save(); c.filter = 'drop-shadow(0 0 10px rgba(150,70,255,.55))';
+  c.drawImage(IMG.boss_dragon, sx, sy, sw, sh, cx - ax * k, by - ay * k + breathe, sw * k, sh * k);
+  c.restore();
+}
 function drawMon(c, m, cx, by, heightPx, t, row = 'idle', flip = false, rt = 0) {
+  if (m.boss && IMG.boss_dragon && IMG.boss_dragon.complete) return drawDragon(c, cx, by, heightPx, t, row === 'die' ? 'hurt' : row, rt);
   const type = m.boss ? BOSS.type : m.type; const mm = META.mons[type];
   const s = heightPx / mm.h;
   const fps = row === 'idle' ? 3 : 8;
@@ -1152,7 +1208,8 @@ function render(now) {
   ctx.save(); ctx.translate(-cam.x, -cam.y); ctx.scale(s, s);
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, 0, 0);
-  if (z.tint) { ctx.fillStyle = z.tint; ctx.globalCompositeOperation = 'multiply'; ctx.fillRect(0, 0, img.width, img.height); ctx.globalCompositeOperation = 'source-over' }
+  if (RD.rain) drawSplashes(ctx, RD, now);
+  if (z.tint && !RD.rain) { ctx.fillStyle = z.tint; ctx.globalCompositeOperation = 'multiply'; ctx.fillRect(0, 0, img.width, img.height); ctx.globalCompositeOperation = 'source-over' }
   const PI = IMG['props_' + z.props], P = META.props[z.props];
   const prop = (k, x, y, sc = 1, flip = false, alpha) => { const r = P[k]; if (r) drawRect(ctx, PI, r, x, y, sc, flip, alpha) };
   for (const d of room.decals) { const r = P[d.k]; if (r) drawRect(ctx, PI, r, d.x, d.y + r[3] / 2, Math.min(1, (RD.floor[2] - RD.floor[0]) * .55 / r[2])) }
@@ -1172,7 +1229,7 @@ function render(now) {
     const [ax, ay] = d === 'n' ? [RD.doors.n[0], RD.floor[1] + tl * .35] : d === 's' ? [RD.doors.s[0], RD.floor[3] - tl * .1] : d === 'w' ? [RD.floor[0] + tl * .25, RD.doors.w[1] + tl * .3] : [RD.floor[2] - tl * .25, RD.doors.e[1] + tl * .3];
     const pulse = .55 + .45 * Math.sin(t * 3 + to);
     ctx.save(); ctx.translate(ax, ay); ctx.rotate({ n: 0, e: Math.PI / 2, s: Math.PI, w: -Math.PI / 2 }[d]);
-    ctx.fillStyle = seen ? `rgba(239,230,207,${.25 + .2 * pulse})` : `rgba(242,195,91,${.45 + .4 * pulse})`;
+    ctx.fillStyle = roomLocked(room) ? 'rgba(255,107,107,.55)' : seen ? `rgba(239,230,207,${.25 + .2 * pulse})` : `rgba(242,195,91,${.45 + .4 * pulse})`;
     ctx.beginPath(); ctx.moveTo(0, -tl * .32); ctx.lineTo(tl * .3, 0); ctx.lineTo(tl * .14, 0); ctx.lineTo(0, -tl * .15); ctx.lineTo(-tl * .14, 0); ctx.lineTo(-tl * .3, 0); ctx.closePath(); ctx.fill();
     ctx.restore();
   }
@@ -1205,7 +1262,7 @@ function render(now) {
       shadow(ctx, mx, my, tl * st.h * .3);
       drawMon(ctx, m, mx, my, tl * st.h, t, 'idle', Math.sin(now / 1000 * .45 + (m.ph || 0) + 1.57) > 0 && !m.boss);
       const left = st.hits - hitsOn(cid(m));
-      const head = my - tl * st.h + (MONS[m.boss ? BOSS.type : m.type].fly ? -tl * st.h * .12 : 0);
+      const head = my - tl * st.h + (!m.boss && MONS[m.type].fly ? -tl * st.h * .12 : 0);
       tags.push({ x: mx, y: head - tl * .3, col: m.boss ? '#e7a6ff' : m.elite ? '#ffd77d' : '#ffb0a8', label: `${st.name} · Lv ${st.lvl}` });
       if (left < st.hits) { const w = tl * 1.1; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(mx - w / 2, head - tl * .2, w, tl * .1); ctx.fillStyle = '#ff6b6b'; ctx.fillRect(mx - w / 2, head - tl * .2, w * left / st.hits, tl * .1) }
       if (fighting) { ctx.font = `${Math.round(tl * .45)}px Silkscreen, monospace`; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd77d'; ctx.fillText('!', mx, head - tl * .72) }
@@ -1249,6 +1306,7 @@ function render(now) {
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, `rgba(0,0,0,${.45 + z.dark})`);
   ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, VH);
   if (z.dark) { ctx.fillStyle = `rgba(0,0,10,${z.dark * .35})`; ctx.fillRect(0, 0, VW, VH) }
+  if (RD.rain) drawRain(ctx, VW, VH, now, 'world');
 }
 function nameTag(name, lv, x, y, tl, col, busy, full) {
   const fs = Math.max(9, tl * .26); ctx.font = `600 ${fs}px "Pixelify Sans", sans-serif`; ctx.textAlign = 'center';
@@ -1318,7 +1376,15 @@ function update(dt, now) {
     if (d === 's') hit = S.py > y1 - tl * .4 && Math.abs(S.px - ex) < tl * .8;
     if (d === 'w') hit = S.px < x0 + tl * .4 && Math.abs(S.py - ey) < tl * .9;
     if (d === 'e') hit = S.px > x1 - tl * .4 && Math.abs(S.py - ey) < tl * .9;
-    if (hit) { goRoom(to, DIRS[d][2]); return }
+    if (hit) {
+      if (roomLocked(room)) {
+        // pushed back from the door: defeat this room's monsters first
+        const back = RD.tile * .7; if (d === 'n') S.py += back; if (d === 's') S.py -= back; if (d === 'w') S.px += back; if (d === 'e') S.px -= back;
+        S.target = null; if (now > (S.lockToast || 0)) { S.lockToast = now + 2500; toast(room.mons.some(m => m.mini) ? 'Defeat the Dark Knight to reach the rooftop!' : 'The doors are sealed. Defeat both monsters in this room first!') }
+        return;
+      }
+      goRoom(to, DIRS[d][2]); return;
+    }
   }
   // monsters
   for (const m of room.mons) {
@@ -1364,17 +1430,17 @@ function applyGame() {
   const prevFloor = S.F ? S.F.n : null;
   loadedKey = key;
   S.F = genFloor(S.game.floor);
-  S.floorDoc = { hits: {}, seen: {}, chests: {}, lives: {}, dead: {}, ans: {}, boss: {} };
+  S.floorDoc = { hits: {}, seen: {}, chests: {}, lives: {}, dead: {}, ans: {}, boss: {}, cleared: {} };
   if (S.me.run !== S.game.run + '-' + S.game.floor) { S.me.run = S.game.run + '-' + S.game.floor; S.me.awarded = {} }
   // floor doc
   if (NET.floorUnsub) { NET.floorUnsub(); NET.floorUnsub = null }
   if (NET.db) {
     NET.floorUnsub = NET.db.doc(floorPath()).onSnapshot(snap => {
       const d = snap.exists ? snap.data() : {};
-      S.floorDoc = { hits: JSON.parse(JSON.stringify(d.hits || {})), seen: { ...(d.seen || {}) }, chests: { ...(d.chests || {}) }, lives: { ...(d.lives || {}) }, dead: { ...(d.dead || {}) }, ans: JSON.parse(JSON.stringify(d.ans || {})), boss: { ...(d.boss || {}) } };
+      S.floorDoc = { hits: JSON.parse(JSON.stringify(d.hits || {})), seen: { ...(d.seen || {}) }, chests: { ...(d.chests || {}) }, lives: { ...(d.lives || {}) }, dead: { ...(d.dead || {}) }, ans: JSON.parse(JSON.stringify(d.ans || {})), boss: { ...(d.boss || {}) }, cleared: { ...(d.cleared || {}) } };
       onFloorDoc();
     }, () => { });
-  } else { const lf = LS.get('gs-floor', null); if (lf && lf.key === floorPath()) S.floorDoc = Object.assign({ hits: {}, seen: {}, chests: {}, lives: {}, dead: {}, ans: {}, boss: {} }, lf.doc) }
+  } else { const lf = LS.get('gs-floor', null); if (lf && lf.key === floorPath()) S.floorDoc = Object.assign({ hits: {}, seen: {}, chests: {}, lives: {}, dead: {}, ans: {}, boss: {}, cleared: {} }, lf.doc) }
   const [ri, x, y] = spawnPoint(); S.room = ri; S.px = x; S.py = y; S.target = null; S.arrive = performance.now() + 600;
   S.fled = {}; clearTimeout(S.climbT); S.climbKey = null;
   if (S.battle) endBattle(true);
@@ -1396,7 +1462,9 @@ function onFloorDoc() {
   if (S.F && S.F.bossRoom >= 0) { const boss = S.F.rooms[S.F.bossRoom].boss; if (boss && isDead(boss) && !S.victoryShown) { S.victoryShown = true; setTimeout(victory, b ? 2200 : 300) } }
 }
 function showBanner() {
-  const z = S.F.z; $('#banner-a').textContent = z.boss ? 'FLOOR 41' : 'FLOOR ' + S.F.n; $('#banner-b').textContent = z.name;
+  const z = S.F.z, c = classLv();
+  if (c) { $('#banner-a').textContent = z.name.toUpperCase(); $('#banner-b').textContent = c.need ? `Reach level ${c.need} to climb higher` : 'Defeat the Dark Knight, then the dragon' }
+  else { $('#banner-a').textContent = z.boss ? 'FLOOR 41' : 'FLOOR ' + S.F.n; $('#banner-b').textContent = z.name }
   const b = $('#banner'); b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
 }
 
@@ -1435,6 +1503,7 @@ function usePotion() {
 
 // ---------- XP ----------
 function gainXP(n) {
+  setTimeout(() => { if (S.ready) onReady() }, 0);
   S.me.xp += n; let up = false;
   while (S.me.xp >= xpNeed(S.me.level)) { S.me.xp -= xpNeed(S.me.level); S.me.level++; up = true }
   if (up) { S.me.hp = maxHP(); toast(`Level up! You are now level ${S.me.level}.`); sfx('level') }
@@ -1494,6 +1563,7 @@ function bossWaitTick() {
   setTimeout(bossWaitTick, 600);
 }
 function askQuestion() {
+  stopCountdown(); $('#b-continue').disabled = false;
   const b = S.battle; b.phase = 'ask'; b.q = nextQuestion(pickTier(b.m));
   $('#b-topic').textContent = b.q.topic; $('#b-fb').hidden = true;
   $('#b-q').innerHTML = esc(b.q.text).replace('___', '<span class="slot" id="slot">?</span>');
@@ -1519,13 +1589,19 @@ function answer(i) {
       b.monAnim = { a: 'hurt', t0: performance.now() }; b.flash = 1;
       b.pops.push({ txt: crit ? `CRITICAL! -${dmg}` : `-${dmg}`, c: crit ? '#ffd77d' : '#fff', side: 1, t0: performance.now() });
       if (crit && HEROES[S.me.hero].healer) floralBloom(b);
+      if (S.code) { const gx = Math.ceil(xpNeed(S.me.level) / 3.5) * dmg; gainXP(gx); b.pops.push({ txt: `+${gx} XP`, c: '#8fb8ff', side: 0, t0: performance.now() + 150 }) }
+      // show why the answer is right; the student moves on when ready
+      const okAns = b.q.answer === '—' ? 'no word (leave it empty)' : `“${esc(b.q.answer)}”`;
+      b.okNote = `<b class="fb-ok">Correct!</b> The answer is <b>${okAns}</b>. ${esc(b.q.expl)}`;
+      $('#b-fb-text').innerHTML = b.okNote; $('#b-continue').innerHTML = 'Next question <kbd>Enter</kbd>'; $('#b-continue').disabled = false;
+      $('#b-fb').hidden = false; b.phase = 'feedback';
       const mine = (S.floorDoc.hits[b.mid] && +S.floorDoc.hits[b.mid][myId()]) || 0;
       const left = b.st.hits - hitsOn(b.mid);
       const add = Math.min(dmg, Math.max(0, left));
       b.hits += add;
       writeFloor({ hits: { [b.mid]: { [myId()]: mine + add } } });
       battleHud();
-      setTimeout(() => { if (S.battle === b && b.phase === 'anim') askQuestion() }, 700);
+      if (b.phase === 'feedback') $('#b-continue').focus({ preventScroll: true });
     }, 420);
   } else {
     b.streak = 0; b.phase = 'anim';
@@ -1538,15 +1614,27 @@ function answer(i) {
       battleHud(); hud();
       const ans = b.q.answer === '—' ? 'no word (leave it empty)' : `“${esc(b.q.answer)}”`;
       $('#b-fb-text').innerHTML = `The answer is <b>${ans}</b>. ${esc(b.q.expl)}`;
-      $('#b-fb').hidden = false; b.phase = 'feedback';
-      if (S.me.hp <= 0) { b.phase = 'feedback-lost'; b.heroAnim = { a: 'die', t0: performance.now() }; $('#b-continue').innerHTML = 'Continue <kbd>Enter</kbd>' }
-      $('#b-continue').focus({ preventScroll: true });
+      $('#b-fb').hidden = false; b.phase = 'feedback'; b.okNote = '';
+      if (S.me.hp <= 0) { b.phase = 'feedback-lost'; b.heroAnim = { a: 'die', t0: performance.now() } }
+      startCountdown(b, 10);
     }, 450);
   }
   sendPresence(true);
 }
+// After a wrong answer the rule stays up for a few seconds so it gets read.
+function startCountdown(b, secs) {
+  stopCountdown(); const btn = $('#b-continue'); const label = b.phase === 'feedback-lost' ? 'Continue' : 'Next question';
+  let left = secs; btn.disabled = true;
+  const tick = () => {
+    if (S.battle !== b || (b.phase !== 'feedback' && b.phase !== 'feedback-lost')) { stopCountdown(); return }
+    if (left <= 0) { stopCountdown(); btn.disabled = false; btn.innerHTML = `${label} <kbd>Enter</kbd>`; btn.focus({ preventScroll: true }); return }
+    btn.innerHTML = `Read the rule… ${left}`; left--;
+  };
+  tick(); S.cdTimer = setInterval(tick, 1000);
+}
+function stopCountdown() { clearInterval(S.cdTimer); S.cdTimer = 0 }
 function continueBattle() {
-  const b = S.battle; if (!b) return;
+  const b = S.battle; if (!b || $('#b-continue').disabled) return;
   if (b.phase === 'feedback') askQuestion();
   else if (b.phase === 'feedback-lost') loseBattle();
   else if (b.phase === 'won' || b.phase === 'lost') endBattle();
@@ -1562,6 +1650,8 @@ function winBattle() {
   if (b.m.chest) { writeFloor({ chests: { [b.m.id]: myId() } }); giveLoot() }
   if (b.m.guard) msg += ' The stairs are open now.';
   document.querySelectorAll('.opt').forEach(el => el.disabled = true);
+  if (b.okNote) msg = b.okNote + '<br>' + msg;
+  stopCountdown(); $('#b-continue').disabled = false;
   $('#b-fb-text').innerHTML = msg; $('#b-fb').hidden = false; $('#b-flee').disabled = true;
   $('#b-continue').innerHTML = 'Back to the castle <kbd>Enter</kbd>';
   battleHud(); $('#b-continue').focus({ preventScroll: true });
@@ -1582,6 +1672,7 @@ function loseBattle() {
 }
 function endBattle(silent) {
   const b = S.battle; if (!b) return;
+  stopCountdown(); $('#b-continue').disabled = false;
   $('#battle').hidden = true; $('#b-continue').innerHTML = 'Continue <kbd>Enter</kbd>';
   S.battle = null; S.mode = S.mode === 'title' ? 'title' : 'play';
   if (!silent) {
@@ -1640,7 +1731,7 @@ function renderStage(now) {
   const lunge = ha === 'attack' || ha === 'cast' ? Math.sin(Math.min(1, ht / .5) * Math.PI) * unit * .5 : 0;
   drawHero(sctx, S.me.hero, 'right', false, hx + lunge, hy, unit * HEROES[S.me.hero].h, ha ? ht : t, ha);
   // monster
-  const m = b.m; const mh = unit * (m.boss ? 2.2 : b.st.h); const mx = W * .72, my = ground;
+  const m = b.m; const mh = unit * (m.boss ? 2.5 : b.st.h); const mx = W * (m.boss ? .7 : .72), my = ground;
   shadow(sctx, mx, my, mh * .35);
   let row = 'idle', rt = 0;
   if (b.monAnim) { const el = (now - b.monAnim.t0) / 1000; const lim = { attack: .6, hurt: .45, die: 99 }[b.monAnim.a]; if (el < lim) { row = b.monAnim.a; rt = el } else if (b.monAnim.a === 'die') { row = 'die'; rt = el } else b.monAnim = null }
@@ -1658,6 +1749,53 @@ function renderStage(now) {
     sctx.fillStyle = '#000'; sctx.fillText(p.txt, x + 2, y + 2); sctx.fillStyle = p.c; sctx.fillText(p.txt, x, y); sctx.globalAlpha = 1;
   }
   sctx.restore();
+  if (RD.rain) drawRain(sctx, W, H, now, 'stage');
+}
+
+// ---------- the summit storm: falling rain, splashes on the stones, lightning ----------
+const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const STORM = { world: { drops: [], last: 0 }, stage: { drops: [], last: 0 }, splashes: [], nextSplash: 0, flash: 0, flashAt: 0, nextBolt: 0 };
+function drawRain(c, W, H, now, key) {
+  const L = STORM[key], dt = Math.min(.05, L.last ? (now - L.last) / 1000 : 0); L.last = now;
+  const want = Math.round((CALM ? .18 : .55) * W * H / 1000 / 2.2);
+  while (L.drops.length < want) L.drops.push({ x: Math.random() * W * 1.2, y: Math.random() * H, z: .45 + Math.random() * .55 });
+  if (L.drops.length > want) L.drops.length = want;
+  const wind = -.22;
+  c.save(); c.lineCap = 'round';
+  for (const d of L.drops) {
+    const sp = (CALM ? 380 : 900) * d.z, len = (CALM ? 6 : 16) * d.z + 4;
+    d.y += sp * dt; d.x += sp * wind * dt;
+    if (d.y > H + 20 || d.x < -40) { d.y = -20 - Math.random() * 60; d.x = Math.random() * W * 1.2 }
+    c.strokeStyle = `rgba(${170 + 50 * d.z},${190 + 40 * d.z},255,${.18 + .32 * d.z})`; c.lineWidth = .6 + d.z * .9;
+    c.beginPath(); c.moveTo(d.x, d.y); c.lineTo(d.x - wind * len, d.y - len); c.stroke();
+  }
+  c.restore();
+  // lightning: a bright double flicker every few seconds (skipped for viewers who prefer less motion)
+  stormFlash(c, W, H, now);
+}
+function stormFlash(c, W, H, now) {
+  if (CALM) return;
+  if (!STORM.nextBolt) STORM.nextBolt = now + 4000 + Math.random() * 5000;
+  if (now > STORM.nextBolt) { STORM.flashAt = now; STORM.nextBolt = now + 6000 + Math.random() * 9000; setTimeout(() => sfx('thunder'), 500 + Math.random() * 900) }
+  const e = (now - STORM.flashAt) / 1000; if (!STORM.flashAt || e > .9) return;
+  const a = e < .08 ? .55 : e < .16 ? .1 : e < .26 ? .38 : Math.max(0, .38 * (1 - (e - .26) / .64));
+  c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = `rgba(160,180,255,${a})`; c.fillRect(0, 0, W, H); c.restore();
+}
+function drawSplashes(c, RD, now) {
+  const [x0, y0, x1, y1] = RD.floor, tl = RD.tile;
+  if (now > STORM.nextSplash) {
+    const n = CALM ? 1 : 3;
+    for (let k = 0; k < n; k++) STORM.splashes.push({ x: lerp(x0, x1, Math.random()), y: lerp(y0, y1, Math.random()), t0: now });
+    STORM.nextSplash = now + (CALM ? 140 : 45);
+  }
+  c.save();
+  for (let i = STORM.splashes.length - 1; i >= 0; i--) {
+    const p = STORM.splashes[i], e = (now - p.t0) / 520; if (e > 1) { STORM.splashes.splice(i, 1); continue }
+    c.strokeStyle = `rgba(190,210,255,${.55 * (1 - e)})`; c.lineWidth = 1.4;
+    c.beginPath(); c.ellipse(p.x, p.y, tl * .2 * e + 1, tl * .07 * e + .5, 0, 0, 6.283); c.stroke();
+    if (e < .3) { c.fillStyle = `rgba(220,230,255,${.7 * (1 - e / .3)})`; c.fillRect(p.x - 1, p.y - tl * .14 * e - 2, 2, 2) }
+  }
+  c.restore();
 }
 
 // ---------- Sweetlillac's floral spell ----------
@@ -1694,8 +1832,14 @@ function nameOf(id) {
   const u = uniquePlayers().find(u => u.id === id); if (u) return String(u.pr.n || 'Hero');
   return (S.players[id] && S.players[id].name) || 'Hero';
 }
+const needLv = () => { const c = classLv(); return c && c.need || 0 };
+function levelOf(id) {
+  if (id === myId()) return S.me.level;
+  const u = uniquePlayers().find(u => u.id === id); if (u) return +u.pr.lv || 1;
+  return +((S.players[id] || {}).level) || 1;
+}
 function foundStairs() {
-  const next = S.game.floor + 1;
+  const next = nextFloor();
   S.votedHide = null;
   if (S.ready && S.ready.key === readyKey()) { onReady(); openReady(); return }
   writeReady({ key: readyKey(), by: S.me.name, byId: myId(), at: Date.now(), votes: {} }, false);
@@ -1711,18 +1855,22 @@ function onReady() {
   if (S.votedHide !== r.key) openReady();
   renderReadyList(voters, votes);
   // everyone ready: climb (the lowest id writes, the others back it up after a moment)
-  if (voters.length && yes.length === voters.length) {
+  const need = needLv(), short = voters.filter(id => levelOf(id) < need);
+  if (voters.length && yes.length === voters.length && !short.length) {
     const writer = voters.slice().sort()[0];
-    const go = () => { if (S.ready && S.ready.key === readyKey()) writeGame({ floor: Math.min(41, S.game.floor + 1) }) };
+    const go = () => { if (S.ready && S.ready.key === readyKey()) writeGame({ floor: nextFloor() }) };
     if (S.climbKey !== r.key) { S.climbKey = r.key; S.climbT = setTimeout(go, writer === myId() ? 600 : 2500 + Math.random() * 1500) }
   } else if (S.climbKey === r.key) { clearTimeout(S.climbT); S.climbKey = null }
 }
 function renderReadyList(voters, votes) {
-  const r = S.ready; const next = S.game.floor + 1; const nz = zoneOf(next);
+  const r = S.ready; const next = nextFloor(); const nz = zoneOf(next); const need = needLv();
   $('#ready-eyebrow').textContent = `${String(r.by || 'Someone')} found the staircase`;
-  $('#ready-title').textContent = next === 41 ? 'Climb to the Summit?' : `Climb to Floor ${next}?`;
-  $('#ready-sub').textContent = nz !== S.F.z ? `Next: ${nz.name}. Everyone must be ready before the class climbs.` : 'Everyone must be ready before the class climbs.';
-  $('#ready-list').innerHTML = voters.map(id => `<li><span>${esc(nameOf(id))}</span><span class="${votes[id] === 1 ? 'ok' : 'wait'}">${votes[id] === 1 ? 'READY' : 'NOT YET'}</span></li>`).join('');
+  $('#ready-title').textContent = S.code ? `Climb to the ${nz.name}?` : next === 41 ? 'Climb to the Summit?' : `Climb to Floor ${next}?`;
+  const short = voters.filter(id => levelOf(id) < need).length;
+  $('#ready-sub').textContent = need ? (short ? `Everyone must be ready and reach level ${need} before the class climbs. ${short === 1 ? '1 hero is' : short + ' heroes are'} still training.` : `Everyone has reached level ${need}. The class climbs when all are ready.`)
+    : nz !== S.F.z ? `Next: ${nz.name}. Everyone must be ready before the class climbs.` : 'Everyone must be ready before the class climbs.';
+  $('#ready-list').innerHTML = voters.map(id => { const lv = levelOf(id), low = need && lv < need;
+    return `<li><span>${esc(nameOf(id))}${need ? ` <small class="${low ? 'wait' : 'ok'}">Lv ${lv}${low ? ` / ${need}` : ''}</small>` : ''}</span><span class="${votes[id] === 1 ? 'ok' : 'wait'}">${votes[id] === 1 ? 'READY' : 'NOT YET'}</span></li>` }).join('');
   const me = votes[myId()] === 1;
   $('#ready-yes').textContent = me ? 'Ready ✓' : "I'm ready"; $('#ready-yes').disabled = me || !S.canWrite;
   $('#ready-no').textContent = me ? 'Wait, not yet' : 'Not yet';
@@ -1735,7 +1883,7 @@ $('#ready-no').onclick = () => {
   if (S.ready && S.ready.votes && S.ready.votes[myId()] === 1) writeReady({ votes: { [myId()]: 0 } }, true);
   S.votedHide = S.ready && S.ready.key; closeReady(); $('#ready-pill').hidden = false;
 };
-$('#ready-skip').onclick = () => { writeGame({ floor: Math.min(41, S.game.floor + 1) }) };
+$('#ready-skip').onclick = () => { writeGame({ floor: nextFloor() }) };
 $('#ready-open').onclick = () => { S.votedHide = null; onReady(); openReady() };
 
 // ---------- victory ----------
@@ -1837,7 +1985,7 @@ $('#b-use-potion').onclick = usePotion;
 $('#inv-potion').onclick = usePotion;
 $('#b-continue').onclick = continueBattle;
 $('#t-move').onclick = () => { const n = clamp(parseInt($('#t-floor').value, 10) || 1, 1, 41); writeGame({ floor: n }); toast(`Class moved to floor ${n}.`); closePanels() };
-$('#t-skip').onclick = () => { writeGame({ floor: Math.min(41, S.game.floor + 1) }); closePanels() };
+$('#t-skip').onclick = () => { writeGame({ floor: nextFloor() }); closePanels() };
 $('#t-reset').onclick = () => {
   const b = $('#t-reset');
   if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'Tap again to restart everyone'; setTimeout(() => { b.dataset.confirm = ''; b.textContent = 'Restart from floor 1' }, 3500); return }
@@ -1853,6 +2001,15 @@ function sfx(kind) {
   if (!S.sound) return;
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)() } catch { return }
   const now = AC.currentTime;
+  if (kind === 'thunder') {
+    const len = 2.2, buf = AC.createBuffer(1, AC.sampleRate * len, AC.sampleRate), d = buf.getChannelData(0);
+    let v = 0; for (let i = 0; i < d.length; i++) { v = v * .985 + (Math.random() * 2 - 1) * .15; d[i] = v }
+    const src = AC.createBufferSource(), lp = AC.createBiquadFilter(), g = AC.createGain();
+    src.buffer = buf; lp.type = 'lowpass'; lp.frequency.value = 260;
+    g.gain.setValueAtTime(.0001, now); g.gain.exponentialRampToValueAtTime(.5, now + .12); g.gain.exponentialRampToValueAtTime(.0001, now + len);
+    src.connect(lp).connect(g).connect(AC.destination); src.start(now); src.stop(now + len);
+    return;
+  }
   const tone = (f, d, type = 'square', v = .06, at = 0, f2) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, now + at); if (f2) o.frequency.exponentialRampToValueAtTime(f2, now + at + d); g.gain.setValueAtTime(v, now + at); g.gain.exponentialRampToValueAtTime(.0001, now + at + d); o.connect(g).connect(AC.destination); o.start(now + at); o.stop(now + at + d + .02) };
   const seq = { hit: [[660, .08], [880, .1, 'square', .06, .07]], crit: [[660, .07], [990, .07, 'square', .06, .06], [1320, .16, 'square', .06, .12]], miss: [[220, .25, 'sawtooth', .05, 0, 110]], win: [[523, .1], [659, .1, 'square', .06, .1], [784, .1, 'square', .06, .2], [1046, .25, 'square', .06, .3]], level: [[392, .1], [523, .1, 'square', .06, .1], [659, .1, 'square', .06, .2], [784, .3, 'triangle', .08, .3]], door: [[180, .15, 'triangle', .05, 0, 90]], chest: [[880, .08, 'triangle'], [1175, .08, 'triangle', .06, .08], [1568, .2, 'triangle', .06, .16]], encounter: [[330, .08], [247, .08, 'square', .06, .09], [330, .14, 'square', .06, .18]], stairs: [[440, .12, 'triangle'], [554, .12, 'triangle', .06, .12], [659, .2, 'triangle', .06, .24]], click: [[700, .05, 'triangle', .04]] }[kind] || [];
   for (const s of seq) tone(...s);

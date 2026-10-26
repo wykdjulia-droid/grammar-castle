@@ -18,7 +18,8 @@ Players share one castle through a free Firebase Realtime Database. Without it, 
 
 - **Teacher:** open the game with `#yourword` on the end of the link. You get the teacher leaderboard: press **Start game** to get a class code (like `OWL-482`), project it, and press **End game** when the lesson is over. **Boot** removes a player; they can only rejoin with a different name.
 - **Students:** type their name, pick a hero, enter the class code and join the class castle. Without a code they play on their own, saved on their device.
-- Each class game starts every hero at level 1.
+- Each class game starts every hero at level 1 and is paced to reach the dragon in about 2 hours.
+- Solo play is a longer adventure of about 6–7 hours.
 
 ## How the shared castle works
 
